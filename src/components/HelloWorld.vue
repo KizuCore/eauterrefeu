@@ -132,8 +132,6 @@ function loop() {
   }
 
   playTurn()
-
-  // boucle toutes les 1000 ms tant que isPlaying = true
   if (isPlaying) setTimeout(loop, 1000)
 }
 
