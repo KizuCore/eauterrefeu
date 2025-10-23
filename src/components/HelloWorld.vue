@@ -33,7 +33,7 @@
         </select>
       </label>
 
-      <button @click="initGame">Reset</button>
+      <button @click="resetGame">Reset</button>
       <button @click="play">Play</button>
     </div>
 
@@ -66,6 +66,9 @@ import { ref, onMounted } from 'vue'
 const wind = ref<0|1|2|3>(1)                         // vent (0..3)
 const humidity = ref<'humide'|'normale'|'seche'|'tres_seche'>('normale')
 const terrain  = ref<'continue'|'peu'|'espacee'|'claire'>('peu')
+
+let isPlaying = false
+let timerId = null
 
 
 const DENS = { continue: 1.0, peu: 0.95, espacee: 0.8, claire: 0.5 }
@@ -109,13 +112,13 @@ function pickTwoDistinct(max) {
   return [intialFieldBurningID, intialFieldBurningID2]
 }
 
+
+/* Initialise le jeu en mettant deux cellules en feu */
 function initGame() {
   const [id1, id2] = pickTwoDistinct(width * height)
   burning.value.set(id1, 2)
   burning.value.set(id2, 2)
 }
-
-let isPlaying = false
 
 function play() {
   if (isPlaying) return  // empêche de relancer si déjà en cours
@@ -132,7 +135,9 @@ function loop() {
   }
 
   playTurn()
-  if (isPlaying) setTimeout(loop, 1000)
+  if (isPlaying) {
+    timerId = setTimeout(loop, 1000)
+  }
 }
 
 
@@ -185,6 +190,27 @@ function tryToBurn(currentState){
 function isEndGame(){
   return burning.length == 0 && bah.length == 0
 }
+
+function resetGame() {
+  // stopper boucle 
+  isPlaying = false
+  if (timerId !== null) {
+    clearTimeout(timerId)
+    timerId = null
+  }
+
+  // vider structures
+  burning.value.clear()
+  bah.value.clear()
+  bac.value.clear()
+
+  // réinitialiser flags
+  isFinished = false
+
+  // relancer
+  initGame()
+}
+
 
 onMounted(() => {
   initGame()
