@@ -3,18 +3,33 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "main": "dist/main/main.mjs",
   "scripts": {
     "dev": "vite",
-    "build": "vue-tsc -b && vite build",
+    "build:renderer": "vite build",
+    "build": "vite build && electron-builder",
     "preview": "vite preview"
+  },
+  "build": {
+    "appId": "com.eauterrefeu.app",
+    "directories": { "output": "release" },
+    "files": [
+      "dist/**",
+      "package.json"
+    ]
   },
   "dependencies": {
     "vue": "^3.5.22"
   },
   "devDependencies": {
+    "@tomjs/vite-plugin-electron": "^1.11.0",
     "@types/node": "^24.6.0",
     "@vitejs/plugin-vue": "^6.0.1",
     "@vue/tsconfig": "^0.8.1",
+    "concurrently": "^9.2.1",
+    "cross-env": "^10.1.0",
+    "electron": "^38.4.0",
+    "electron-builder": "^26.0.12",
     "typescript": "~5.9.3",
     "vite": "^7.1.7",
     "vue-tsc": "^3.1.0"
