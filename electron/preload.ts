@@ -1,5 +1,5 @@
-import { contextBridge } from 'electron';
+import { contextBridge, ipcRenderer } from 'electron'
 
-contextBridge.exposeInMainWorld('api', {
-  ping: () => 'pong',
-});
+contextBridge.exposeInMainWorld('electronAPI', {
+  onUpdateReady: (callback: () => void) => ipcRenderer.on('updateReady', callback)
+})

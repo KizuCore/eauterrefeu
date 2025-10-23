@@ -1,24 +1,54 @@
 {
   "name": "eauterrefeu",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.2.0",
+  "description": "Application desktop EauterreFeu avec Vue 3 et Electron",
+  "author": "BAT",
   "type": "module",
   "main": "dist/main/main.mjs",
   "scripts": {
     "dev": "vite",
+    "electron:dev": "vite",
     "build:renderer": "vite build",
     "build": "vite build && electron-builder",
+    "publish": "electron-builder --publish always",
     "preview": "vite preview"
   },
   "build": {
     "appId": "com.eauterrefeu.app",
-    "directories": { "output": "release" },
+    "productName": "EauterreFeu",
+    "directories": {
+      "output": "release"
+    },
     "files": [
       "dist/**",
+      "electron/**",
       "package.json"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "electron/icon.ico"
+    },
+    "mac": {
+      "category": "public.app-category.productivity",
+      "icon": "electron/icon.icns"
+    },
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "icon": "electron/icon.png"
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "kizucore",
+        "repo": "eauterrefeu"
+      }
     ]
   },
   "dependencies": {
+    "electron-updater": "^6.6.2",
     "vue": "^3.5.22"
   },
   "devDependencies": {
