@@ -1,3 +1,5 @@
+
+
 <template>
   <div>
     <h2>Forêt 5x5</h2>
@@ -26,11 +28,11 @@ import { ref, onMounted } from 'vue'
 const width = 5
 const height = 5
 
-// 1..N pour v-for (lisible dans le template)
+// 1..N pour v-for
 const rows = ref(Array.from({ length: height }, (_, i) => i + 1))
 const cols = ref(Array.from({ length: width },  (_, i) => i + 1))
 
-// Ensemble des cellules en feu (ids numériques)
+// Ensemble des cellules en feu
 const burning = ref(new Set())
 
 // id stable pour la cellule (0..24)
@@ -58,40 +60,3 @@ onMounted(() => {
 })
 </script>
 
-<style scoped>
-.grid-table { border-collapse: collapse; margin: 0 auto; }
-.grid-table td { padding: 0; }
-
-.field {
-  width: 56px;
-  height: 56px;
-  text-align: center;
-  vertical-align: middle;
-  background: linear-gradient(135deg, #4caf50, #81c784);
-  color: white;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
-  border: 1px solid #388e3c;
-  box-shadow: 0 0 10px rgba(76, 175, 80, 0.6);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-.field:hover {
-  transform: scale(1.05);
-  box-shadow: 0 0 20px rgba(76, 175, 80, 0.9);
-}
-.field > span {
-  display: inline-block;
-  font-weight: 600;
-}
-
-.burning {
-  background: linear-gradient(135deg, #ff3c00, #ff8000);
-  color: white;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-  border: 1px solid #cc2a00;
-  box-shadow: 0 0 10px rgba(255, 60, 0, 0.6);
-}
-.burning:hover {
-  transform: scale(1.05);
-  box-shadow: 0 0 20px rgba(255, 60, 0, 0.9);
-}
-</style>
