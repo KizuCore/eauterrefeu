@@ -6,17 +6,12 @@
 
     <table class="grid-table">
       <tbody>
-        <tr v-for="r in rows" :key="`r-${r}`">
+        <tr v-for="r in rows" :key="r">
           <td
             v-for="c in cols"
-            :key="`c-${r}-${c}`"
-            class="field"
-            :class="{ burning: burning.has(cellId(r - 1, c - 1)),
-              bah: bah.has(cellId(r - 1, c - 1))
-             }"
-            :id="cellId(r - 1, c - 1)"
+            :key="`${r}-${c}`"
+            :class="['field', stateClass(cellId(r - 1, c - 1))]"
           >
-            <span>{{ cellId(r - 1, c - 1) }}</span>
           </td>
         </tr>
       </tbody>
@@ -27,8 +22,8 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 
-const width = 5
-const height = 5
+const width = 10
+const height = 10
 
 // 1..N pour v-for
 const rows = ref(Array.from({ length: height }, (_, i) => i + 1))
@@ -39,7 +34,7 @@ const burning = ref(new Map())
 const bah = ref(new Set())
 const bac = ref(new Set())
 
-const wind = 0
+const wind = 2
 
 // id stable pour la cellule (0..24)
 const cellId = (rIdx, cIdx) => rIdx * width + cIdx
@@ -48,6 +43,13 @@ const cellId = (rIdx, cIdx) => rIdx * width + cIdx
 const rand = (n) => Math.floor(Math.random() * n)
 
 let isFinished = false;
+
+function stateClass(id) {
+  if (burning.value.has(id)) return 'burning' 
+  if (bah.value.has(id))     return 'hot'    
+  if (bac.value.has(id))     return 'cold'    
+  return 'veg'                                 
+}
 
 // tire deux entiers distincts 0..(max-1)
 function pickTwoDistinct(max) {
@@ -79,36 +81,55 @@ function play() {
 function playTurn(){
   let currentState = [];
   //On parcours les bosqués à l'état burn / burn and hot
-  let currentBurningField = burning.value + bah.value;
-  for (const fieldBurn of burning.value.keys()) {    
-    let isHot = bah.value.has(fieldBurn);
-    let field = fieldBurn + height;
-    if(canSendBrandon(fieldBurn) && canBeBurned(field)){
-      if(tryToBurn(currentState, field)){
-        currentState.push(field);
+  const merged = [...burning.value.keys(), ...bah.value];
+  for (const fieldBurn of merged) {    
+    let fields = getNeighborhood(fieldBurn);
+    fields.forEach(field => {
+      if(canSendBrandon(fieldBurn) && canBeBurned(field)){
+        if(tryToBurn(currentState, field)){
+          currentState.push(field);
+        }
       }
-    }
-    if(!isHot){
+    })
+  }
+  currentState.forEach(value => {
+     burning.value.set(value, 2);
+  })
+  merged.forEach(fieldBurn => {
+    let isBurning = burning.value.has(fieldBurn);
+    if(isBurning){
       burning.value.set(fieldBurn, burning.value.get(fieldBurn)-1) 
       if(burning.value.get(fieldBurn) == 0){
         burning.value.delete(fieldBurn)
         bah.value.add(fieldBurn);
       }
+    }else{
+      if(fireStop(fieldBurn)){
+        bah.value.delete(fieldBurn);
+        bac.value.add(fieldBurn);
+      }
     }
-  }
-  currentState.forEach(value => {
-     burning.value.set(value, 2);
   })
+}
+
+function fireStop(fieldBurn){
+  let proba = 0.6
+  let stat =Math.random();
+  return stat <= proba
 }
 
 function canSendBrandon(fieldBurn){
   let proba = 0.005 * 1 + wind
-  let stat = Math.floor(Math.random());
+  let stat =Math.random();
   return stat <= proba
 }
 
+function isValidField(field){
+  return field <= height*width && field >= 0
+}
+
 function canBeBurned(field){
-  return (field <= 25 && field >= 0 && !burning.value.has(field) && !bah.value.has(field));
+  return (isValidField(field) && !burning.value.has(field) && !bah.value.has(field) && !bac.value.has(field));
 }
 
 function tryToBurn(currentState){
@@ -118,6 +139,16 @@ function tryToBurn(currentState){
     return true
   }
   return false
+}
+
+function getNeighborhood(fieldBurn){
+  let fields = [fieldBurn+1, fieldBurn-1, fieldBurn+width, fieldBurn-height];
+  fields.forEach(field =>{
+    if(!isValidField(field)){
+      fields.pop(field);
+    }
+  })
+  return fields
 }
 
 function isEndGame(){
