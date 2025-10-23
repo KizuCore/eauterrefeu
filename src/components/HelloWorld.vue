@@ -32,7 +32,7 @@
       </label>
 
       <button @click="resetGame">Reset</button>
-      <button @click="play">Play</button>
+      <button @click="play" :disabled="canPlay">Play</button>
     </div>
 
     <table class="grid-table">
@@ -65,14 +65,21 @@ let isFinished = false; // indique si le jeu est terminé
 let isPlaying = false // indique si la boucle de jeu est en cours
 let timerId = null // pour stocker l'ID du timer
 
-const wind = ref<0|1|2|3>(1) // vent (0..3)
-const soil = ref<'humide'|'normal'|'sec'|'tres_sec'>('normal')
-const terrain  = ref<'continue'|'peu'|'espacee'|'claire'>('peu')
+
+
+
+const wind = ref<0|1|2|3|null>(null) // vent (0..3)
+const soil = ref<'humide'|'normal'|'sec'|'tres_sec'|null>(null)
+const terrain  = ref<'continue'|'peu'|'espacee'|'claire'|null>(null)
 
 
 const DENS = { continue: 1.0, peu: 0.95, espacee: 0.8, claire: 0.5 }
 const P_IGNITE = { humide: 0.1, normale: 0.3, seche: 0.6, tres_seche: 0.9 }
 
+function canPlay() {
+  return soil.value !== null || terrain.value !== null || isPlaying || wind.value !== null || isFinished
+}
+// FIX LE CAN PLAY ICI
 function stateClass(id) {
   if (burning.value.has(id)) return 'burning' 
   if (bah.value.has(id))     return 'hot'    
