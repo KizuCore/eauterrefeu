@@ -123,6 +123,10 @@ function play() {
   loop()
 }
 
+
+
+
+
 function playTurn(){
   let currentState = [];
   //On parcours les bosqués à l'état burn / burn and hot
