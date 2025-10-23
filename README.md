@@ -1,15 +1,15 @@
 
 # Projet Vue 3 avec Vite
 
-Ce projet est une base légère et rapide construite avec **Vue 3** et **Vite**.
+Ce projet est avec **Vue 3** et **Vite**.
 
 ---
 
 ## Prérequis
 
-Assure-toi d’avoir installé :
+Assurez-vous d’avoir installé :
 - **Node.js** ≥ 16
-- **npm**, **yarn** ou **pnpm**
+- **npm**
 
 Vérifie les versions installées :
 ```bash
