@@ -3,8 +3,6 @@
 <template>
   <div class="app">
     <h2>Forêt 5x5</h2>
-
-    <!-- (optionnel) petits contrôles si tu veux déjà binder tes refs -->
     <div class="controls">
       <label>Vent
         <select v-model="wind">
@@ -63,12 +61,13 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 
-const wind = ref<0|1|2|3>(1)                         // vent (0..3)
+let isFinished = false; // indique si le jeu est terminé
+let isPlaying = false // indique si la boucle de jeu est en cours
+let timerId = null // pour stocker l'ID du timer
+
+const wind = ref<0|1|2|3>(1) // vent (0..3)
 const humidity = ref<'humide'|'normale'|'seche'|'tres_seche'>('normale')
 const terrain  = ref<'continue'|'peu'|'espacee'|'claire'>('peu')
-
-let isPlaying = false
-let timerId = null
 
 
 const DENS = { continue: 1.0, peu: 0.95, espacee: 0.8, claire: 0.5 }
@@ -80,8 +79,6 @@ function stateClass(id) {
   if (bac.value.has(id))     return 'cold'    
   return 'veg'                                 
 }
-
-
 
 const width = 5
 const height = 5
@@ -102,8 +99,6 @@ const cellId = (rIdx, cIdx) => rIdx * width + cIdx
 // entier 0..(n-1)
 const rand = (n) => Math.floor(Math.random() * n)
 
-let isFinished = false;
-
 // tire deux entiers distincts 0..(max-1)
 function pickTwoDistinct(max) {
   let intialFieldBurningID = rand(max)
@@ -120,12 +115,14 @@ function initGame() {
   burning.value.set(id2, 2)
 }
 
+/* Démarre la boucle principale du jeu */
 function play() {
   if (isPlaying) return  // empêche de relancer si déjà en cours
   isPlaying = true
   loop()
 }
 
+/* Boucle principale du jeu */
 function loop() {
   if (isEndGame()) {
     isPlaying = false
@@ -142,7 +139,7 @@ function loop() {
 
 
 
-
+/* Joue un tour de jeu */
 function playTurn(){
   let currentState = [];
   //On parcours les bosqués à l'état burn / burn and hot
@@ -168,16 +165,19 @@ function playTurn(){
   })
 }
 
+/* Vérifie si une cellule en feu peut envoyer des braises */
 function canSendBrandon(fieldBurn){
   let proba = 0.005 * 1 + wind
   let stat = Math.floor(Math.random());
   return stat <= proba
 }
 
+/* Vérifie si une cellule peut être brûlée */
 function canBeBurned(field){
   return (field <= 25 && field >= 0 && !burning.value.has(field) && !bah.value.has(field));
 }
 
+/* Tente de brûler une cellule voisine */
 function tryToBurn(currentState){
   let proba = 0.3
   let stat = Math.floor(Math.random());
@@ -187,6 +187,7 @@ function tryToBurn(currentState){
   return false
 }
 
+/* Vérifie si le jeu est terminé */
 function isEndGame(){
   return burning.length == 0 && bah.length == 0
 }
