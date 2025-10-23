@@ -33,3 +33,29 @@
   transform: scale(1.05);
   box-shadow: 0 0 20px rgba(255, 60, 0, 0.9);
 }
+
+/* Brûlé chaud (ex-bah) */
+.hot {
+  background: linear-gradient(135deg, #6d4c41, #8d6e63);
+  color: white;
+  border: 1px solid #5d4037;
+  box-shadow: 0 0 10px rgba(109, 76, 65, 0.6);
+}
+
+/* Brûlé froid (inerte, cendres) */
+.cold {
+  background: linear-gradient(135deg, #9e9e9e, #bdbdbd);
+  color: #222;
+  border: 1px solid #757575;
+  box-shadow: none;
+}
+
+.legend { margin-top:10px; display:flex; gap:14px; align-items:center;justify-content:center;padding-top:20px; }
+.legend .dot { display:inline-block; width:12px; height:12px; border-radius:2px; margin-right:6px; }
+.legend .veg { background:#2e7d32; }
+.legend .burning { background:#ef6c00; }
+.legend .hot { background:#6d4c41; }
+.legend .cold { background:#9e9e9e; }
+
+.controls { display:flex; gap:12px; align-items:center; margin: 8px 0 16px; justify-content: center;}
+.controls select, .controls button { padding:4px 8px; }

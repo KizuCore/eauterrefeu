@@ -8,6 +8,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
+// @ts-ignore
 import HelloWorld from './components/HelloWorld.vue';
 
 const updateAvailable = ref(false);

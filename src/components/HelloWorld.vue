@@ -1,31 +1,84 @@
 
 
 <template>
-  <div>
+  <div class="app">
     <h2>Forêt 5x5</h2>
+
+    <!-- (optionnel) petits contrôles si tu veux déjà binder tes refs -->
+    <div class="controls">
+      <label>Vent
+        <select v-model="wind">
+          <option :value="0">Nul</option>
+          <option :value="1">Modéré</option>
+          <option :value="2">Fort</option>
+          <option :value="3">Violent</option>
+        </select>
+      </label>
+
+      <label>Humidité
+        <select v-model="humidity">
+          <option value="humide">Humide</option>
+          <option value="normale">Normale</option>
+          <option value="seche">Sèche</option>
+          <option value="tres_seche">Très sèche</option>
+        </select>
+      </label>
+
+      <label>Terrain
+        <select v-model="terrain">
+          <option value="continue">Continue</option>
+          <option value="peu">Peu espacée</option>
+          <option value="espacee">Espacée</option>
+          <option value="claire">Clairsemée</option>
+        </select>
+      </label>
+
+      <button @click="initGame">Reset</button>
+      <button @click="play">Play</button>
+    </div>
 
     <table class="grid-table">
       <tbody>
-        <tr v-for="r in rows" :key="`r-${r}`">
+        <tr v-for="r in rows" :key="r">
           <td
             v-for="c in cols"
-            :key="`c-${r}-${c}`"
-            class="field"
-            :class="{ burning: burning.has(cellId(r - 1, c - 1)),
-              bah: bah.has(cellId(r - 1, c - 1))
-             }"
-            :id="cellId(r - 1, c - 1)"
+            :key="`${r}-${c}`"
+            :class="['field', stateClass(cellId(r - 1, c - 1))]"
           >
-            <span>{{ cellId(r - 1, c - 1) }}</span>
           </td>
         </tr>
       </tbody>
     </table>
+
+    <div class="legend">
+      <span class="dot veg"></span> Végétation
+      <span class="dot burning"></span> En feu
+      <span class="dot hot"></span> Brûlé chaud
+      <span class="dot cold"></span> Brûlé froid
+    </div>
   </div>
 </template>
 
+
 <script setup>
 import { ref, onMounted } from 'vue'
+
+const wind = ref<0|1|2|3>(1)                         // vent (0..3)
+const humidity = ref<'humide'|'normale'|'seche'|'tres_seche'>('normale')
+const terrain  = ref<'continue'|'peu'|'espacee'|'claire'>('peu')
+
+
+const DENS = { continue: 1.0, peu: 0.95, espacee: 0.8, claire: 0.5 }
+const P_IGNITE = { humide: 0.1, normale: 0.3, seche: 0.6, tres_seche: 0.9 }
+
+function stateClass(id) {
+  if (burning.value.has(id)) return 'burning' 
+  if (bah.value.has(id))     return 'hot'    
+  if (bac.value.has(id))     return 'cold'    
+  return 'veg'                                 
+}
+
+
 
 const width = 5
 const height = 5
@@ -39,7 +92,6 @@ const burning = ref(new Map())
 const bah = ref(new Set())
 const bac = ref(new Set())
 
-const wind = 0
 
 // id stable pour la cellule (0..24)
 const cellId = (rIdx, cIdx) => rIdx * width + cIdx
@@ -63,17 +115,12 @@ function initGame() {
   burning.value.set(id2, 2)
 }
 
-function play() {
-  if (isEndGame()) {
-    isFinished = true;
-    console.log('🔥 Jeu terminé');
-    return;
-  }
+let isPlaying = false
 
-  setTimeout(() => {
-    playTurn();
-    play(); // se rappelle lui-même
-  }, 1000);
+function play() {
+  if (isPlaying) return  // empêche de relancer si déjà en cours
+  isPlaying = true
+  loop()
 }
 
 function playTurn(){
@@ -126,7 +173,6 @@ function isEndGame(){
 
 onMounted(() => {
   initGame()
-  play();
 })
 </script>
 
