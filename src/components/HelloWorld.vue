@@ -13,12 +13,12 @@
         </select>
       </label>
 
-      <label>Humidité
-        <select v-model="humidity">
+      <label>Sol
+        <select v-model="soil">
           <option value="humide">Humide</option>
           <option value="normale">Normale</option>
-          <option value="seche">Sèche</option>
-          <option value="tres_seche">Très sèche</option>
+          <option value="sec">Sec</option>
+          <option value="tres_sec">Très sec</option>
         </select>
       </label>
 
@@ -66,7 +66,7 @@ let isPlaying = false // indique si la boucle de jeu est en cours
 let timerId = null // pour stocker l'ID du timer
 
 const wind = ref<0|1|2|3>(1) // vent (0..3)
-const humidity = ref<'humide'|'normale'|'seche'|'tres_seche'>('normale')
+const soil = ref<'humide'|'normal'|'sec'|'tres_sec'>('normal')
 const terrain  = ref<'continue'|'peu'|'espacee'|'claire'>('peu')
 
 
