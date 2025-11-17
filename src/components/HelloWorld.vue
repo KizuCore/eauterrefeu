@@ -32,7 +32,7 @@
       </label>
 
       <label>Terrain
-        <select v-model="terrain">
+        <select v-model="vegetation">
           <option value="continu">Continu</option>
           <option value="peu">Peu espacé</option>
           <option value="espace">Espacé</option>
