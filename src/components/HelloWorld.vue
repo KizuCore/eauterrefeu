@@ -76,9 +76,8 @@ const API_URL = 'http://localhost:3000/api' // backend
 // taille de la grille par défaut
 const width = ref(5)
 const height = ref(5)
-const fieldType = ref<'humide'|'normal'|'sec'|'tres_sec'|null>(null)
-const fieldType2 = 'tres_sec';
-const terrain  = ref<'continue'|'peu'|'espacee'|'claire'|null>(null)
+const fieldType = ref<'humide' | 'normal' | 'sec' | 'tres_sec'>('normal')
+const terrain  = ref<'continu'|'peu'|'espace'|'clair'>('continu')
 
 // 1..N pour v-for
 const rows = ref<number[]>([])
@@ -120,16 +119,16 @@ function removeValue<T>(array: T[], value: T): T[] {
   return array.filter(item => item !== value);
 }
 
-function getFieldProba(fieldType: string){
-  switch(fieldType){
+function getFieldProba(ft: 'humide' | 'normal' | 'sec' | 'tres_sec'): number {
+  switch (ft) {
     case 'humide':
-      return 0.1;
+      return 0.1
     case 'normal':
-      return 0.3;
+      return 0.3
     case 'sec':
-      return 0.6;
-    case 'tres_sec' :
-      return 0.9;
+      return 0.6
+    case 'tres_sec':
+      return 0.9
   }
 }
 
@@ -237,7 +236,8 @@ function canBeBurned(field: number){
 }
 
 function tryToBurn(){
-  let proba = getFieldProba(fieldType2);
+  const ft = fieldType.value 
+  let proba = getFieldProba(ft);
   let stat = Math.random();
   if(proba != undefined && stat <= proba){
     return true
