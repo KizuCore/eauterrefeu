@@ -208,7 +208,6 @@ function loop() {
   if (isEndGame()) {
     isFinished.value = true
     isPlaying.value = false
-    console.log('🔥 Jeu terminé')
     return
   }
 
