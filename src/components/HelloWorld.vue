@@ -23,7 +23,7 @@
       </label>
 
       <label>Sol
-        <select v-model="soil">
+        <select v-model="fieldType">
           <option value="humide">Humide</option>
           <option value="normale">Normale</option>
           <option value="sec">Sec</option>
@@ -76,7 +76,8 @@ const API_URL = 'http://localhost:3000/api' // backend
 // taille de la grille par défaut
 const width = ref(5)
 const height = ref(5)
-const soil = ref<'humide'|'normal'|'sec'|'tres_sec'|null>(null)
+const fieldType = ref<'humide'|'normal'|'sec'|'tres_sec'|null>(null)
+const fieldType2 = 'tres_sec';
 const terrain  = ref<'continue'|'peu'|'espacee'|'claire'|null>(null)
 
 // 1..N pour v-for
@@ -110,19 +111,39 @@ const cellId = (rIdx: number, cIdx: number) => rIdx * width.value + cIdx
 // entier 0..(n-1)
 const rand = (n: number) => Math.floor(Math.random() * n)
 
+
 function stateClass(id: number) {
-  if (burning.value.has(id)) return 'burning'
-  if (bah.value.has(id)) return 'hot'
-  if (bac.value.has(id)) return 'cold'
-  return 'veg'
+  if (burning.value.has(id)) return 'burning' 
+  if (bah.value.has(id))     return 'hot'    
+  if (bac.value.has(id))     return 'cold'    
+  return 'veg'                                 
+}
+
+function removeValue<T>(array: T[], value: T): T[] {
+  return array.filter(item => item !== value);
+}
+
+function getFieldProba(fieldType: string){
+  switch(fieldType){
+    case 'humide':
+      return 0.1;
+    case 'normal':
+      return 0.3;
+    case 'sec':
+      return 0.6;
+    case 'tres_sec' :
+      return 0.9;
+  }
 }
 
 // tire deux entiers distincts 0..(max-1)
-function pickTwoDistinct(max: number): [number, number] {
-  let id1 = rand(max)
-  let id2 = rand(max)
-  while (id2 === id1) id2 = rand(max)
-  return [id1, id2]
+function pickThreeDistinct(max: number): [number, number, number] {
+  let initialFieldBurningID = rand(max)
+  let initialFieldBurningID2 = rand(max)
+  let initialFieldBurningID3 = rand(max)
+  while (initialFieldBurningID2 === initialFieldBurningID) initialFieldBurningID2 = rand(max)
+  while (initialFieldBurningID3 === initialFieldBurningID && initialFieldBurningID3 === initialFieldBurningID2) initialFieldBurningID3 = rand(max)
+  return [initialFieldBurningID, initialFieldBurningID2, initialFieldBurningID3]
 }
 
 function initGame() {
@@ -130,11 +151,10 @@ function initGame() {
   bah.value.clear()
   bac.value.clear()
 
-  const [id1, id2] = pickTwoDistinct(width.value * height.value)
+  const [id1, id2, id3] = pickThreeDistinct(width.value * height.value)
   burning.value.set(id1, 2)
   burning.value.set(id2, 2)
-
-  isFinished.value = false
+  burning.value.set(id3, 2)
 }
 
 function loop() {
@@ -159,16 +179,16 @@ function play() {
   loop()
 }
 
-function playTurn() {
-  const currentState: number[] = []
-  const merged = [...burning.value.keys(), ...bah.value]
-
-  for (const fieldBurn of merged) {
-    const fields = getNeighborhood(fieldBurn)
+function playTurn(){
+  let currentState: any[] = [];
+  //On parcours les bosqués à l'état burn / burn and hot
+  const merged = [...burning.value.keys(), ...bah.value];
+  for (const fieldBurn of merged) {    
+    let fields = getNeighborhood(fieldBurn);
     fields.forEach(field => {
-      if (canSendBrandon(fieldBurn) && canBeBurned(field)) {
-        if (tryToBurn()) {
-          currentState.push(field)
+      if(canSendBrandon() && canBeBurned(field)){
+        if(tryToBurn()){
+          currentState.push(field);
         }
       }
     })
@@ -188,58 +208,57 @@ function playTurn() {
       } else {
         burning.value.set(fieldBurn, newTimer)
       }
-    } else {
-      if (fireStop(fieldBurn)) {
-        bah.value.delete(fieldBurn)
-        bac.value.add(fieldBurn)
+    }else{
+      if(fireStop()){
+        bah.value.delete(fieldBurn);
+        bac.value.add(fieldBurn);
       }
     }
   })
 }
 
-function fireStop(fieldBurn: number) {
-  const stat = Math.random()
-  return stat <= probaFireStop.value
-}
-
-function canSendBrandon(fieldBurn: number) {
-  const proba = probaSendBrandonBase.value * 1 + wind.value
-  const stat = Math.random()
+function fireStop(){
+  let proba = 0.6;
+  let stat =Math.random();
   return stat <= proba
 }
 
-function isValidField(field: number) {
-  // max index = width*height - 1
-  return field >= 0 && field < height.value * width.value
+function canSendBrandon(){
+
+  let proba = 0.05 * (1 + wind.value)
+  let stat =Math.random();
+  debugger;
+  return stat <= proba
 }
 
-function canBeBurned(field: number) {
-  return (
-    isValidField(field) &&
-    !burning.value.has(field) &&
-    !bah.value.has(field) &&
-    !bac.value.has(field)
-  )
+function isValidField(field: number){
+  return field <= height.value*width.value && field >= 0
 }
 
-function tryToBurn() {
-  const stat = Math.random()
-  return stat <= probaBurn.value
+function canBeBurned(field: number){
+  return (isValidField(field) && !burning.value.has(field) && !bah.value.has(field) && !bac.value.has(field));
 }
 
-function getNeighborhood(fieldBurn: number) {
-  const w = width.value
-  const rightEdge = (fieldBurn + 1) % w === 0
-  const leftEdge = fieldBurn % w === 0
+function tryToBurn(){
+  let proba = getFieldProba(fieldType2);
+  let stat = Math.random();
+  if(proba != undefined && stat <= proba){
+    return true
+  }
+  return false
+}
 
-  const fields = [
-    rightEdge ? fieldBurn : fieldBurn + 1,
-    leftEdge ? fieldBurn : fieldBurn - 1,
-    fieldBurn + w,
-    fieldBurn - w,
-  ]
-
-  return fields.filter(isValidField)
+function getNeighborhood(fieldBurn: number){
+  let fields =[];
+  let rightEdge = (fieldBurn+1)%width.value == 0 ? true : false;
+  let leftEdge = fieldBurn%width.value == 0 || fieldBurn == 0 ? true : false;
+  fields = [rightEdge ? fieldBurn : fieldBurn+1, leftEdge ? fieldBurn : fieldBurn-1, fieldBurn+width.value, fieldBurn-height.value];
+  fields.forEach(field =>{
+    if(!isValidField(field)){
+      removeValue(fields, field)
+    }
+  })
+  return fields
 }
 
 function isEndGame() {
