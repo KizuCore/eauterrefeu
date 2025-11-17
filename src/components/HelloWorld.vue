@@ -3,6 +3,23 @@
 <template>
   <div>
     <h2>Forêt {{ width }} x {{ height }}</h2>
+
+    <div class="controls">
+      <label>
+        Largeur
+        <input type="number" v-model.number="width" min="5" max="200" />
+      </label>
+
+      <label>
+        Hauteur
+        <input type="number" v-model.number="height" min="5" max="200" />
+      </label>
+
+      <button @click="startSimulation">
+        Play
+      </button>
+    </div>
+
     <div class="table-container">
       <table class="grid-table">
         <tbody>
@@ -11,7 +28,8 @@
               v-for="c in cols"
               :key="`${r}-${c}`"
               :class="['field', stateClass(cellId(r - 1, c - 1))]"
-            ><div class="carre"></div>
+            >
+              <div class="carre"></div>
             </td>
           </tr>
         </tbody>
@@ -20,23 +38,24 @@
   </div>
 </template>
 
-<script setup>
+
+<script setup lang="ts">
 import { ref, onMounted } from 'vue'
 
-const API_URL = 'http://localhost:3000/api' // backend config
+const API_URL = 'http://localhost:3000/api' // backend 
 
-// taille de la grille 
-const width = ref(0)
-const height = ref(0)
+// taille de la grille par défaut
+const width = ref(5)
+const height = ref(5)
 
-// 1..N pour v-for (on les recalculera quand width/height changent)
-const rows = ref(Array.from({ length: height.value }, (_, i) => i + 1))
-const cols = ref(Array.from({ length: width.value },  (_, i) => i + 1))
+// 1..N pour v-for
+const rows = ref<number[]>([])
+const cols = ref<number[]>([])
 
 // Ensemble des cellules en feu
-const burning = ref(new Map()) // id -> timer
-const bah = ref(new Set())     // brûlé chaud
-const bac = ref(new Set())     // brûlé froid
+const burning = ref(new Map<number, number>()) // id -> timer
+const bah = ref(new Set<number>())             // brûlé chaud
+const bac = ref(new Set<number>())             // brûlé froid
 
 // paramètres venant de la config
 const wind = ref(2)
@@ -46,13 +65,18 @@ const probaFireStop = ref(0.6)
 
 let isFinished = false
 
+function rebuildGrid() {
+  rows.value = Array.from({ length: height.value }, (_, i) => i + 1)
+  cols.value = Array.from({ length: width.value },  (_, i) => i + 1)
+}
+
 // id stable pour la cellule (0..N-1)
-const cellId = (rIdx, cIdx) => rIdx * width.value + cIdx
+const cellId = (rIdx: number, cIdx: number) => rIdx * width.value + cIdx
 
 // entier 0..(n-1)
-const rand = (n) => Math.floor(Math.random() * n)
+const rand = (n: number) => Math.floor(Math.random() * n)
 
-function stateClass(id) {
+function stateClass(id: number) {
   if (burning.value.has(id)) return 'burning'
   if (bah.value.has(id))     return 'hot'
   if (bac.value.has(id))     return 'cold'
@@ -60,7 +84,7 @@ function stateClass(id) {
 }
 
 // tire deux entiers distincts 0..(max-1)
-function pickTwoDistinct(max) {
+function pickTwoDistinct(max: number): [number, number] {
   let id1 = rand(max)
   let id2 = rand(max)
   while (id2 === id1) id2 = rand(max)
@@ -75,6 +99,8 @@ function initGame() {
   const [id1, id2] = pickTwoDistinct(width.value * height.value)
   burning.value.set(id1, 2)
   burning.value.set(id2, 2)
+
+  isFinished = false
 }
 
 function play() {
@@ -91,7 +117,7 @@ function play() {
 }
 
 function playTurn() {
-  const currentState = []
+  const currentState: number[] = []
   const merged = [...burning.value.keys(), ...bah.value]
 
   for (const fieldBurn of merged) {
@@ -128,23 +154,23 @@ function playTurn() {
   })
 }
 
-function fireStop(fieldBurn) {
+function fireStop(fieldBurn: number) {
   const stat = Math.random()
   return stat <= probaFireStop.value
 }
 
-function canSendBrandon(fieldBurn) {
+function canSendBrandon(fieldBurn: number) {
   const proba = probaSendBrandonBase.value * 1 + wind.value
   const stat = Math.random()
   return stat <= proba
 }
 
-function isValidField(field) {
+function isValidField(field: number) {
   // max index = width*height - 1
   return field >= 0 && field < height.value * width.value
 }
 
-function canBeBurned(field) {
+function canBeBurned(field: number) {
   return (
     isValidField(field) &&
     !burning.value.has(field) &&
@@ -158,7 +184,7 @@ function tryToBurn() {
   return stat <= probaBurn.value
 }
 
-function getNeighborhood(fieldBurn) {
+function getNeighborhood(fieldBurn: number) {
   const w = width.value
   const rightEdge = (fieldBurn + 1) % w === 0
   const leftEdge = fieldBurn % w === 0
@@ -177,19 +203,18 @@ function isEndGame() {
   return burning.value.size === 0 && bah.value.size === 0
 }
 
-// 🔌 IPC : on charge la config depuis Node AVANT de lancer le feu
+// 🔌 IPC : on charge la config depuis Node au chargement
 async function loadConfigFromApi() {
   try {
     const res = await fetch(`${API_URL}/config`)
     const cfg = await res.json()
 
-    // --- on met à jour width/height ---
     if (typeof cfg.width === 'number' && typeof cfg.height === 'number') {
       width.value = cfg.width
       height.value = cfg.height
-      // ⚠️ recalcul des lignes/colonnes
-      rows.value = Array.from({ length: height.value }, (_, i) => i + 1)
-      cols.value = Array.from({ length: width.value },  (_, i) => i + 1)
+      rebuildGrid()
+    } else {
+      rebuildGrid()
     }
 
     if (typeof cfg.wind === 'number') wind.value = cfg.wind
@@ -202,15 +227,41 @@ async function loadConfigFromApi() {
     }
   } catch (e) {
     console.error('Erreur de chargement de la config API', e)
+    rebuildGrid()
   }
 }
 
-onMounted(async () => {
-  await loadConfigFromApi() // 🔌 récupère width/height = 10 x 10
+async function startSimulation() {
+  // on envoie la nouvelle taille au backend
+  try {
+    await fetch(`${API_URL}/config`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        width: width.value,
+        height: height.value,
+        wind: wind.value,
+        probaSendBrandonBase: probaSendBrandonBase.value,
+        probaBurn: probaBurn.value,
+        probaFireStop: probaFireStop.value,
+      }),
+    })
+  } catch (e) {
+    console.error('Erreur lors de la mise à jour de la config', e)
+  }
+
+  // on reconstruit la grille selon la taille choisie
+  rebuildGrid()
+  // on lance une nouvelle partie
   initGame()
   play()
+}
+
+onMounted(async () => {
+  await loadConfigFromApi()   // récupère variables
 })
 </script>
+
 
 
 
