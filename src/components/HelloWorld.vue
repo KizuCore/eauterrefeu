@@ -2,28 +2,29 @@
 
 <template>
   <div>
-    <h2>Forêt 5x5</h2>
-
-    <table class="grid-table">
-      <tbody>
-        <tr v-for="r in rows" :key="r">
-          <td
-            v-for="c in cols"
-            :key="`${r}-${c}`"
-            :class="['field', stateClass(cellId(r - 1, c - 1))]"
-          >
-          </td>
-        </tr>
-      </tbody>
-    </table>
+    <h2>Forêt {{ width }} x {{ height }}</h2>
+    <div class="table-container">
+      <table class="grid-table">
+        <tbody>
+          <tr v-for="r in rows" :key="r">
+            <td
+              v-for="c in cols"
+              :key="`${r}-${c}`"
+              :class="['field', stateClass(cellId(r - 1, c - 1))]"
+            ><div class="carre"></div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
 
-const width = 10
-const height = 10
+const width = 100
+const height = 100
 
 // 1..N pour v-for
 const rows = ref(Array.from({ length: height }, (_, i) => i + 1))
@@ -75,7 +76,7 @@ function play() {
   setTimeout(() => {
     playTurn();
     play(); // se rappelle lui-même
-  }, 1000);
+  }, 100);
 }
 
 function playTurn(){
@@ -142,7 +143,10 @@ function tryToBurn(currentState){
 }
 
 function getNeighborhood(fieldBurn){
-  let fields = [fieldBurn+1, fieldBurn-1, fieldBurn+width, fieldBurn-height];
+  let fields =[];
+  let rightEdge = (fieldBurn+1)%width == 0 ? true : false;
+  let leftEdge = fieldBurn%width == 0 || fieldBurn == 0 ? true : false;
+  fields = [rightEdge ? fieldBurn : fieldBurn+1, leftEdge ? fieldBurn : fieldBurn-1, fieldBurn+width, fieldBurn-height];
   fields.forEach(field =>{
     if(!isValidField(field)){
       fields.pop(field);
