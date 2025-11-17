@@ -77,7 +77,8 @@ const API_URL = 'http://localhost:3000/api' // backend
 const width = ref(5)
 const height = ref(5)
 const fieldType = ref<'humide' | 'normal' | 'sec' | 'tres_sec'>('normal')
-const terrain  = ref<'continu'|'peu'|'espace'|'clair'>('continu')
+const vegetation  = ref<'continue'|'peu'|'espacee'|'clairsemee'>('continue')
+const inert = ref(new Set<number>())
 
 // 1..N pour v-for
 const rows = ref<number[]>([])
@@ -109,15 +110,31 @@ const rand = (n: number) => Math.floor(Math.random() * n)
 
 
 function stateClass(id: number) {
-  if (burning.value.has(id)) return 'burning' 
-  if (bah.value.has(id))     return 'hot'    
-  if (bac.value.has(id))     return 'cold'    
-  return 'veg'                                 
+  if (inert.value.has(id))   return 'inert'   
+  if (burning.value.has(id)) return 'burning'
+  if (bah.value.has(id))     return 'hot'
+  if (bac.value.has(id))     return 'cold'
+  return 'veg'
 }
+
 
 function removeValue<T>(array: T[], value: T): T[] {
   return array.filter(item => item !== value);
 }
+
+function getTerrainVegetationProba(t: 'continue' | 'peu' | 'espacee' | 'clairsemee'): number {
+  switch (t) {
+    case 'continue':
+      return 1.0      // 100% végétation
+    case 'peu':
+      return 0.95     // 95% végétation
+    case 'espacee':
+      return 0.80     // 80% végétation
+    case 'clairsemee':
+      return 0.50     // 50% végétation
+  }
+}
+
 
 function getFieldProba(ft: 'humide' | 'normal' | 'sec' | 'tres_sec'): number {
   switch (ft) {
@@ -132,14 +149,31 @@ function getFieldProba(ft: 'humide' | 'normal' | 'sec' | 'tres_sec'): number {
   }
 }
 
-// tire deux entiers distincts 0..(max-1)
-function pickThreeDistinct(max: number): [number, number, number] {
-  let initialFieldBurningID = rand(max)
-  let initialFieldBurningID2 = rand(max)
-  let initialFieldBurningID3 = rand(max)
-  while (initialFieldBurningID2 === initialFieldBurningID) initialFieldBurningID2 = rand(max)
-  while (initialFieldBurningID3 === initialFieldBurningID && initialFieldBurningID3 === initialFieldBurningID2) initialFieldBurningID3 = rand(max)
-  return [initialFieldBurningID, initialFieldBurningID2, initialFieldBurningID3]
+function buildTerrain() {
+  inert.value.clear()
+
+  const p = getTerrainVegetationProba(vegetation.value)
+  const total = width.value * height.value
+
+  for (let id = 0; id < total; id++) {
+    const hasVegetation = Math.random() <= p
+    if (!hasVegetation) {
+      inert.value.add(id) // case inerte
+    }
+  }
+}
+
+
+// tire 3 entiers distincts 0..(max-1)
+function pickThreeDistinct(list: number[]): [number, number, number] {
+  if (list.length < 3) {
+    throw new Error("Pas assez de cases végétalisées pour lancer 3 feux")
+  }
+  const copy = [...list]
+  const id1 = copy.splice(rand(copy.length), 1)[0] as number 
+  const id2 = copy.splice(rand(copy.length), 1)[0] as number
+  const id3 = copy.splice(rand(copy.length), 1)[0] as number
+  return [id1, id2, id3]
 }
 
 function initGame() {
@@ -147,11 +181,26 @@ function initGame() {
   bah.value.clear()
   bac.value.clear()
 
-  const [id1, id2, id3] = pickThreeDistinct(width.value * height.value)
+  // Construire le terrain (végétation + inertes)
+  buildTerrain()
+
+  // Récupérer toutes les cases qui ont de la végétation
+  const vegetatedCells: number[] = []
+  const total = width.value * height.value
+
+  for (let id = 0; id < total; id++) {
+    if (!inert.value.has(id)) {
+      vegetatedCells.push(id)
+    }
+  }
+
+  // Tirer 3 feux initiaux uniquement sur ces cases
+  const [id1, id2, id3] = pickThreeDistinct(vegetatedCells)
   burning.value.set(id1, 2)
   burning.value.set(id2, 2)
   burning.value.set(id3, 2)
 }
+
 
 function loop() {
   if (!isPlaying.value) return
@@ -232,7 +281,7 @@ function isValidField(field: number){
 }
 
 function canBeBurned(field: number){
-  return (isValidField(field) && !burning.value.has(field) && !bah.value.has(field) && !bac.value.has(field));
+  return (isValidField(field) && !burning.value.has(field) && !inert.value.has(field) && !bah.value.has(field) && !bac.value.has(field));
 }
 
 function tryToBurn(){
@@ -278,7 +327,7 @@ async function loadConfigFromApi() {
 
     if (typeof cfg.wind === 'number') wind.value = cfg.wind
     if (typeof cfg.fieldType === 'string') fieldType.value = cfg.fieldType
-    if (typeof cfg.terrain === 'string') terrain.value = cfg.terrain
+    if (typeof cfg.vegetation === 'string') vegetation.value = cfg.vegetation
 
   } catch (e) {
     console.error('Erreur de chargement de la config API', e)
@@ -317,7 +366,7 @@ async function startSimulation() {
         height: height.value,
         wind: wind.value,
         fieldType: fieldType.value,
-        terrain: terrain.value
+        vegetation: vegetation.value
       }),
     })
   } catch (e) {
