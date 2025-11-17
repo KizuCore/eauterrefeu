@@ -14,7 +14,7 @@
       </label>
 
       <button @click="startSimulation" :disabled="isPlaying">
-        Lancer
+        {{ isStopped? "Reset" : "Lancer" }}
       </button>
       <button v-if="isPlaying" @click="togglePause">
         Pause
@@ -69,7 +69,8 @@ const probaBurn = ref(0.3)
 const probaFireStop = ref(0.6)
 
 const isFinished = ref(false)
-const isPlaying = ref(false)          // savoir si la simu tourne
+const isPlaying = ref(false)   // savoir si la simu tourne
+const isStopped = ref(false)          
 let timerId: number | null = null     // pour annuler le setTimeout
 
 function rebuildGrid() {
@@ -128,6 +129,7 @@ function loop() {
 function play() {
   if (isPlaying.value) return   // déjà en cours
   isPlaying.value = true
+  isStopped.value = false
   loop()
 }
 
@@ -249,6 +251,7 @@ async function loadConfigFromApi() {
 /** bouton Pause */
 function pause() {
   isPlaying.value = false
+  isStopped.value = true
   if (timerId !== null) {
     clearTimeout(timerId)
     timerId = null
