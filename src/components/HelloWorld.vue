@@ -25,7 +25,7 @@
       <label>Sol
         <select v-model="fieldType">
           <option value="humide">Humide</option>
-          <option value="normale">Normale</option>
+          <option value="normal">Normale</option>
           <option value="sec">Sec</option>
           <option value="tres_sec">Très sec</option>
         </select>
