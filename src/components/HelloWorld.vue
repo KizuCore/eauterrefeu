@@ -203,7 +203,7 @@ function isEndGame() {
   return burning.value.size === 0 && bah.value.size === 0
 }
 
-// 🔌 IPC : on charge la config depuis Node au chargement
+// charge la config depuis Node au chargement
 async function loadConfigFromApi() {
   try {
     const res = await fetch(`${API_URL}/config`)
