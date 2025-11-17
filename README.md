@@ -27,8 +27,6 @@ npm install
 ```
 
 ### 2 Lancer le serveur back
-
-
 ```bash
 cd backend
 ```
@@ -52,6 +50,10 @@ Le projet sera accessible sur :
 
 ```
 eauterrefeu/
+├─ backend/           # Code back
+│  ├─ config.json
+│  └─ server.cjs
+│
 ├─ electron/           # Code principal Electron (main & preload)
 │  ├─ main.ts
 │  └─ preload.ts
