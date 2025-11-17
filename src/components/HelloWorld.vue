@@ -31,12 +31,12 @@
         </select>
       </label>
 
-      <label>Terrain
+      <label>Végétation
         <select v-model="vegetation">
-          <option value="continu">Continu</option>
+          <option value="continue">Continue</option>
           <option value="peu">Peu espacé</option>
-          <option value="espace">Espacé</option>
-          <option value="clair">Clairsemé</option>
+          <option value="espacee">Espacé</option>
+          <option value="clairsemee">Clairsemé</option>
         </select>
       </label>
 
