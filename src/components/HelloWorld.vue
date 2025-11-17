@@ -33,10 +33,10 @@
 
       <label>Terrain
         <select v-model="terrain">
-          <option value="continue">Continue</option>
+          <option value="continu">Continue</option>
           <option value="peu">Peu espacée</option>
-          <option value="espacee">Espacée</option>
-          <option value="claire">Clairsemée</option>
+          <option value="espace">Espacée</option>
+          <option value="clair">Clairsemée</option>
         </select>
       </label>
 
@@ -84,16 +84,13 @@ const terrain  = ref<'continue'|'peu'|'espacee'|'claire'|null>(null)
 const rows = ref<number[]>([])
 const cols = ref<number[]>([])
 
-// Ensemble des cellules en feu
+// Ensemble cellules en feu
 const burning = ref(new Map<number, number>()) // id -> timer
 const bah = ref(new Set<number>())             // brûlé chaud
 const bac = ref(new Set<number>())             // brûlé froid
 
 // paramètres venant de la config
-const wind = ref(2)
-const probaSendBrandonBase = ref(0.005)
-const probaBurn = ref(0.3)
-const probaFireStop = ref(0.6)
+const wind = ref(1)
 
 const isFinished = ref(false)
 const isPlaying = ref(false)   // savoir si la simu tourne
@@ -265,7 +262,7 @@ function isEndGame() {
   return burning.value.size === 0 && bah.value.size === 0
 }
 
-// charge la config depuis Node au chargement
+// charge config depuis Node au chargement
 async function loadConfigFromApi() {
   try {
     const res = await fetch(`${API_URL}/config`)
@@ -280,13 +277,9 @@ async function loadConfigFromApi() {
     }
 
     if (typeof cfg.wind === 'number') wind.value = cfg.wind
-    if (typeof cfg.probaSendBrandonBase === 'number') {
-      probaSendBrandonBase.value = cfg.probaSendBrandonBase
-    }
-    if (typeof cfg.probaBurn === 'number') probaBurn.value = cfg.probaBurn
-    if (typeof cfg.probaFireStop === 'number') {
-      probaFireStop.value = cfg.probaFireStop
-    }
+    if (typeof cfg.fieldType === 'string') fieldType.value = cfg.fieldType
+    if (typeof cfg.terrain === 'string') terrain.value = cfg.terrain
+
   } catch (e) {
     console.error('Erreur de chargement de la config API', e)
     rebuildGrid()
@@ -314,7 +307,7 @@ function togglePause() {
 
 
 async function startSimulation() {
-  // on envoie la nouvelle taille au backend
+  // envoie nouvelle taille au backend
   try {
     await fetch(`${API_URL}/config`, {
       method: 'PUT',
@@ -323,22 +316,21 @@ async function startSimulation() {
         width: width.value,
         height: height.value,
         wind: wind.value,
-        probaSendBrandonBase: probaSendBrandonBase.value,
-        probaBurn: probaBurn.value,
-        probaFireStop: probaFireStop.value,
+        fieldType: fieldType.value,
+        terrain: terrain.value
       }),
     })
   } catch (e) {
     console.error('Erreur lors de la mise à jour de la config', e)
   }
 
-  // on reconstruit la grille selon la taille choisie
+  // reconstruit grille selon taille choisie
   rebuildGrid()
 
-  // on arrête une éventuelle simu en cours
+  // arrête une éventuelle simu en cours
   pause()
 
-  // on lance une nouvelle partie
+  // lance nouvelle partie
   initGame()
   play()
 }
