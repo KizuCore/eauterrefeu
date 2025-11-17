@@ -13,6 +13,34 @@
         <input type="number" v-model.number="height" min="5" max="200" />
       </label>
 
+      <label>Vent
+        <select v-model="wind">
+          <option :value="0">Nul</option>
+          <option :value="1">Modéré</option>
+          <option :value="2">Fort</option>
+          <option :value="3">Violent</option>
+        </select>
+      </label>
+
+      <label>Sol
+        <select v-model="soil">
+          <option value="humide">Humide</option>
+          <option value="normale">Normale</option>
+          <option value="sec">Sec</option>
+          <option value="tres_sec">Très sec</option>
+        </select>
+      </label>
+
+      <label>Terrain
+        <select v-model="terrain">
+          <option value="continue">Continue</option>
+          <option value="peu">Peu espacée</option>
+          <option value="espacee">Espacée</option>
+          <option value="claire">Clairsemée</option>
+        </select>
+      </label>
+
+
       <button @click="startSimulation" :disabled="isPlaying">
         {{ isStopped? "Reset" : "Lancer" }}
       </button>
@@ -22,10 +50,6 @@
       <button v-if="!isPlaying && !isFinished" @click="togglePause">
         Reprendre
       </button>
-
-
-
-
     </div>
 
 
@@ -52,6 +76,8 @@ const API_URL = 'http://localhost:3000/api' // backend
 // taille de la grille par défaut
 const width = ref(5)
 const height = ref(5)
+const soil = ref<'humide'|'normal'|'sec'|'tres_sec'|null>(null)
+const terrain  = ref<'continue'|'peu'|'espacee'|'claire'|null>(null)
 
 // 1..N pour v-for
 const rows = ref<number[]>([])
@@ -122,7 +148,7 @@ function loop() {
   }
 
   playTurn()
-  timerId = window.setTimeout(loop, 100)
+  timerId = window.setTimeout(loop, 1000)
 }
 
 /** Démarre / relance la simulation */
