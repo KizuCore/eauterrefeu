@@ -23,7 +23,7 @@ app.get('/api/config', (req, res) => {
   res.json(cfg);
 });
 
-// PUT pour mettre à jour la config
+// PUT pour MAJ config
 app.put('/api/config', (req, res) => {
   const current = readConfig();
   const updated = { ...current, ...req.body };
