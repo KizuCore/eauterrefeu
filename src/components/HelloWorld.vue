@@ -226,7 +226,7 @@ function play() {
 
 function playTurn(){
   let currentState: any[] = [];
-  //On parcours les bosqués à l'état burn / burn and hot
+  // parcours les cases à l'état burn / burn and hot
   const merged = [...burning.value.keys(), ...bah.value];
   for (const fieldBurn of merged) {    
     let fields = getNeighborhood(fieldBurn);
@@ -269,7 +269,6 @@ function fireStop(){
 }
 
 function canSendBrandon(){
-
   let proba = 0.05 * (1 + wind.value)
   let stat =Math.random();
   debugger;
