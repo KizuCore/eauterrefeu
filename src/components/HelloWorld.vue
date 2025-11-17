@@ -1,39 +1,39 @@
-
-
 <template>
   <div>
     <h2>Forêt {{ width }} x {{ height }}</h2>
 
-<div class="controls">
-  <label>
-    Largeur
-    <input type="number" v-model.number="width" min="5" max="200" />
-  </label>
+    <div class="controls">
+      <label>
+        Largeur
+        <input type="number" v-model.number="width" min="5" max="200" />
+      </label>
 
-  <label>
-    Hauteur
-    <input type="number" v-model.number="height" min="5" max="200" />
-  </label>
+      <label>
+        Hauteur
+        <input type="number" v-model.number="height" min="5" max="200" />
+      </label>
 
-  <button @click="startSimulation">
-    Play
-  </button>
+      <button @click="startSimulation" :disabled="isPlaying">
+        Lancer
+      </button>
+      <button v-if="isPlaying" @click="togglePause">
+        Pause
+      </button>
+      <button v-if="!isPlaying && !isFinished" @click="togglePause">
+        Reprendre
+      </button>
 
-  <button @click="pause" :disabled="!isPlaying">
-    Pause
-  </button>
-</div>
+
+
+
+    </div>
 
 
     <div class="table-container">
       <table class="grid-table">
         <tbody>
           <tr v-for="r in rows" :key="r">
-            <td
-              v-for="c in cols"
-              :key="`${r}-${c}`"
-              :class="['field', stateClass(cellId(r - 1, c - 1))]"
-            >
+            <td v-for="c in cols" :key="`${r}-${c}`" :class="['field', stateClass(cellId(r - 1, c - 1))]">
               <div class="carre"></div>
             </td>
           </tr>
@@ -68,13 +68,13 @@ const probaSendBrandonBase = ref(0.005)
 const probaBurn = ref(0.3)
 const probaFireStop = ref(0.6)
 
-let isFinished = false
+const isFinished = ref(false)
 const isPlaying = ref(false)          // savoir si la simu tourne
 let timerId: number | null = null     // pour annuler le setTimeout
 
 function rebuildGrid() {
   rows.value = Array.from({ length: height.value }, (_, i) => i + 1)
-  cols.value = Array.from({ length: width.value },  (_, i) => i + 1)
+  cols.value = Array.from({ length: width.value }, (_, i) => i + 1)
 }
 
 // id stable pour la cellule (0..N-1)
@@ -85,8 +85,8 @@ const rand = (n: number) => Math.floor(Math.random() * n)
 
 function stateClass(id: number) {
   if (burning.value.has(id)) return 'burning'
-  if (bah.value.has(id))     return 'hot'
-  if (bac.value.has(id))     return 'cold'
+  if (bah.value.has(id)) return 'hot'
+  if (bac.value.has(id)) return 'cold'
   return 'veg'
 }
 
@@ -107,14 +107,14 @@ function initGame() {
   burning.value.set(id1, 2)
   burning.value.set(id2, 2)
 
-  isFinished = false
+  isFinished.value = false
 }
 
 function loop() {
   if (!isPlaying.value) return
 
   if (isEndGame()) {
-    isFinished = true
+    isFinished.value = true
     isPlaying.value = false
     console.log('🔥 Jeu terminé')
     return
@@ -254,6 +254,16 @@ function pause() {
     timerId = null
   }
 }
+function togglePause() {
+  if (isPlaying.value) {
+    pause()
+  } else {
+    if (!isEndGame()) {
+      play()
+    }
+  }
+}
+
 
 async function startSimulation() {
   // on envoie la nouvelle taille au backend
@@ -289,7 +299,3 @@ onMounted(async () => {
   await loadConfigFromApi()   // récupère variables
 })
 </script>
-
-
-
-
