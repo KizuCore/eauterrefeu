@@ -2,7 +2,6 @@
   "width": 10,
   "height": 10,
   "wind": 2,
-  "probaSendBrandonBase": 0.005,
-  "probaBurn": 0.3,
-  "probaFireStop": 0.6
+  "fieldType" : "normal",
+  "terrain": "continu"
 }
