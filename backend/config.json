@@ -1,6 +1,6 @@
 {
-  "width": 25,
-  "height": 50,
+  "width": 5,
+  "height": 5,
   "wind": 2,
   "probaSendBrandonBase": 0.005,
   "probaBurn": 0.3,
