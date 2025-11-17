@@ -27,12 +27,9 @@ npm install
 ```
 
 ### 2 Lancer le serveur back
-```bash
-cd backend
-```
 
 ```bash
-node server.cjs
+node backend/server.cjs
 ```
 
 ---
