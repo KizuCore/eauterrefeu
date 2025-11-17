@@ -9,15 +9,15 @@ function createWindow() {
   // Optional: create a persistent session in a writable folder
   const ses = session.fromPartition('persist:myApp');
 
+  const preloadPath = path.join(__dirname, 'preload.mjs');  // maintenant dans dist/main/
   win = new BrowserWindow({
     width: 1000,
     height: 700,
     webPreferences: {
-      preload: path.join(__dirname, '../preload/preload.mjs'), // preload path
+      preload: preloadPath,
       contextIsolation: true,
-      nodeIntegration: false,
-      session: ses, // use writable session to avoid cache errors
-    },
+      nodeIntegration: false
+    }
   });
 
   if (isDev) {
