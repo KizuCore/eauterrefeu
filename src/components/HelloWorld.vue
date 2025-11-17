@@ -4,21 +4,26 @@
   <div>
     <h2>Forêt {{ width }} x {{ height }}</h2>
 
-    <div class="controls">
-      <label>
-        Largeur
-        <input type="number" v-model.number="width" min="5" max="200" />
-      </label>
+<div class="controls">
+  <label>
+    Largeur
+    <input type="number" v-model.number="width" min="5" max="200" />
+  </label>
 
-      <label>
-        Hauteur
-        <input type="number" v-model.number="height" min="5" max="200" />
-      </label>
+  <label>
+    Hauteur
+    <input type="number" v-model.number="height" min="5" max="200" />
+  </label>
 
-      <button @click="startSimulation">
-        Play
-      </button>
-    </div>
+  <button @click="startSimulation">
+    Play
+  </button>
+
+  <button @click="pause" :disabled="!isPlaying">
+    Pause
+  </button>
+</div>
+
 
     <div class="table-container">
       <table class="grid-table">
@@ -64,6 +69,8 @@ const probaBurn = ref(0.3)
 const probaFireStop = ref(0.6)
 
 let isFinished = false
+const isPlaying = ref(false)          // savoir si la simu tourne
+let timerId: number | null = null     // pour annuler le setTimeout
 
 function rebuildGrid() {
   rows.value = Array.from({ length: height.value }, (_, i) => i + 1)
@@ -103,17 +110,25 @@ function initGame() {
   isFinished = false
 }
 
-function play() {
+function loop() {
+  if (!isPlaying.value) return
+
   if (isEndGame()) {
     isFinished = true
+    isPlaying.value = false
     console.log('🔥 Jeu terminé')
     return
   }
 
-  setTimeout(() => {
-    playTurn()
-    play() // se rappelle lui-même
-  }, 100)
+  playTurn()
+  timerId = window.setTimeout(loop, 100)
+}
+
+/** Démarre / relance la simulation */
+function play() {
+  if (isPlaying.value) return   // déjà en cours
+  isPlaying.value = true
+  loop()
 }
 
 function playTurn() {
@@ -231,6 +246,15 @@ async function loadConfigFromApi() {
   }
 }
 
+/** bouton Pause */
+function pause() {
+  isPlaying.value = false
+  if (timerId !== null) {
+    clearTimeout(timerId)
+    timerId = null
+  }
+}
+
 async function startSimulation() {
   // on envoie la nouvelle taille au backend
   try {
@@ -252,6 +276,10 @@ async function startSimulation() {
 
   // on reconstruit la grille selon la taille choisie
   rebuildGrid()
+
+  // on arrête une éventuelle simu en cours
+  pause()
+
   // on lance une nouvelle partie
   initGame()
   play()
