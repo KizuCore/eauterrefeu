@@ -1,7 +1,7 @@
 {
   "name": "eauterrefeu",
   "private": true,
-  "version": "0.2.0",
+  "version": "1.0.0",
   "description": "Application desktop EauterreFeu avec Vue 3 et Electron",
   "author": "BAT",
   "type": "module",
