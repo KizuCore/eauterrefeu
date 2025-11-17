@@ -7,10 +7,15 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+const NUL_WIND_PATH = path.join(__dirname, 'nul_wind.json');
 const CONFIG_PATH = path.join(__dirname, 'config.json');
 
 function readConfig() {
   return JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf-8'));
+}
+
+function readNulWindPattern() {
+  return JSON.parse(fs.readFileSync(NUL_WIND_PATH, 'utf-8'));
 }
 
 function writeConfig(newConfig) {
@@ -29,6 +34,12 @@ app.put('/api/config', (req, res) => {
   const updated = { ...current, ...req.body };
   writeConfig(updated);
   res.json(updated);
+});
+
+// GET wind nul 
+app.get('/api/nul_wind', (req, res) => {
+  const cfg = readNulWindPattern();
+  res.json(cfg);
 });
 
 const PORT = 3000;

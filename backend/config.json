@@ -1,7 +1,9 @@
 {
   "width": 10,
   "height": 10,
-  "wind": 2,
-  "fieldType" : "normal",
-  "terrain": "continu"
+  "direction_wind": 2,
+  "wind_strenght": 2,
+  "fieldType": "tres_sec",
+  "terrain": "continu",
+  "wind": 3
 }
