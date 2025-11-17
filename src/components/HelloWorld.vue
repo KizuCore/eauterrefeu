@@ -33,10 +33,10 @@
 
       <label>Terrain
         <select v-model="terrain">
-          <option value="continu">Continue</option>
-          <option value="peu">Peu espacée</option>
-          <option value="espace">Espacée</option>
-          <option value="clair">Clairsemée</option>
+          <option value="continu">Continu</option>
+          <option value="peu">Peu espacé</option>
+          <option value="espace">Espacé</option>
+          <option value="clair">Clairsemé</option>
         </select>
       </label>
 
