@@ -1,6 +1,6 @@
 <template>
   <div class="app">
-    <h1>Bienvenue sur EauTerreFeu v 0.4.0</h1>
+    <h1>Bienvenue sur EauTerreFeu v 0.2.0</h1>
     <p v-if="updateAvailable">Une nouvelle version est disponible 🎉</p>
   </div>
   <HelloWorld msg="Vite + Vue" />
@@ -8,7 +8,8 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
-import HelloWorld from "./components/HelloWorld.vue";
+// @ts-ignore: No declaration file for .vue modules
+import HelloWorld from './components/HelloWorld.vue';
 
 const updateAvailable = ref(false);
 

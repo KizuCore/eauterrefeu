@@ -21,12 +21,25 @@ npm -v
 
 ## ⚙️ Installation et exécution
 
-### 1️⃣ Installer les dépendances
+### 1 Installer les dépendances
 ```bash
 npm install
 ```
 
-### 2️⃣ Lancer le serveur de développement
+### 2 Lancer le serveur back
+
+
+```bash
+cd backend
+```
+
+```bash
+node server.cjs
+```
+
+---
+
+### 3 Lancer le serveur de développement
 ```bash
 npm run dev
 ```

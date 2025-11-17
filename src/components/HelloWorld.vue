@@ -1,108 +1,211 @@
 <template>
   <div>
-    <h2>Forêt 5x5</h2>
+    <h2>Forêt {{ width }} x {{ height }}</h2>
 
-    <table class="grid-table">
-      <tbody>
-        <tr v-for="r in rows" :key="r">
-          <td
-            v-for="c in cols"
-            :key="`${r}-${c}`"
-            :class="['field', stateClass(cellId(r - 1, c - 1))]"
-          ></td>
-        </tr>
-      </tbody>
-    </table>
+    <div class="controls">
+      <label>
+        Largeur
+        <input type="number" v-model.number="width" min="5" max="200" />
+      </label>
+
+      <label>
+        Hauteur
+        <input type="number" v-model.number="height" min="5" max="200" />
+      </label>
+
+      <label>Vent
+        <select v-model="wind">
+          <option :value="0">Nul</option>
+          <option :value="1">Modéré</option>
+          <option :value="2">Fort</option>
+          <option :value="3">Violent</option>
+        </select>
+      </label>
+
+      <label>Sol
+        <select v-model="fieldType">
+          <option value="humide">Humide</option>
+          <option value="normal">Normal</option>
+          <option value="sec">Sec</option>
+          <option value="tres_sec">Très sec</option>
+        </select>
+      </label>
+
+      <label>Terrain
+        <select v-model="terrain">
+          <option value="continu">Continu</option>
+          <option value="peu">Peu espacé</option>
+          <option value="espace">Espacé</option>
+          <option value="clair">Clairsemé</option>
+        </select>
+      </label>
+
+
+      <button @click="startSimulation" :disabled="isPlaying">
+        {{ isStopped? "Reset" : "Lancer" }}
+      </button>
+      <button v-if="isPlaying" @click="togglePause">
+        Pause
+      </button>
+      <button v-if="!isPlaying && !isFinished" @click="togglePause">
+        Reprendre
+      </button>
+    </div>
+
+
+    <div class="table-container">
+      <table class="grid-table">
+        <tbody>
+          <tr v-for="r in rows" :key="r">
+            <td v-for="c in cols" :key="`${r}-${c}`" :class="['field', stateClass(cellId(r - 1, c - 1))]">
+              <div class="carre"></div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 </template>
 
-<script setup>
-import { ref, onMounted } from "vue";
 
-const width = 10;
-const height = 10;
+<script setup lang="ts">
+import { ref, onMounted } from 'vue'
+
+const API_URL = 'http://localhost:3000/api' // backend 
+
+// taille de la grille par défaut
+const width = ref(5)
+const height = ref(5)
+const fieldType = ref<'humide' | 'normal' | 'sec' | 'tres_sec'>('normal')
+const terrain  = ref<'continu'|'peu'|'espace'|'clair'>('continu')
 
 // 1..N pour v-for
-const rows = ref(Array.from({ length: height }, (_, i) => i + 1));
-const cols = ref(Array.from({ length: width }, (_, i) => i + 1));
+const rows = ref<number[]>([])
+const cols = ref<number[]>([])
 
-// Ensemble des cellules en feu
-const burning = ref(new Map());
-const bah = ref(new Set());
-const bac = ref(new Set());
+// Ensemble cellules en feu
+const burning = ref(new Map<number, number>()) // id -> timer
+const bah = ref(new Set<number>())             // brûlé chaud
+const bac = ref(new Set<number>())             // brûlé froid
 
-const wind = 2;
+// paramètres venant de la config
+const wind = ref(1)
 
-// id stable pour la cellule (0..24)
-const cellId = (rIdx, cIdx) => rIdx * width + cIdx;
+const isFinished = ref(false)
+const isPlaying = ref(false)   // savoir si la simu tourne
+const isStopped = ref(false)          
+let timerId: number | null = null     // pour annuler le setTimeout
+
+function rebuildGrid() {
+  rows.value = Array.from({ length: height.value }, (_, i) => i + 1)
+  cols.value = Array.from({ length: width.value }, (_, i) => i + 1)
+}
+
+// id stable pour la cellule (0..N-1)
+const cellId = (rIdx: number, cIdx: number) => rIdx * width.value + cIdx
 
 // entier 0..(n-1)
-const rand = (n) => Math.floor(Math.random() * n);
+const rand = (n: number) => Math.floor(Math.random() * n)
 
-let isFinished = false;
 
-function stateClass(id) {
-  if (burning.value.has(id)) return "burning";
-  if (bah.value.has(id)) return "hot";
-  if (bac.value.has(id)) return "cold";
-  return "veg";
+function stateClass(id: number) {
+  if (burning.value.has(id)) return 'burning' 
+  if (bah.value.has(id))     return 'hot'    
+  if (bac.value.has(id))     return 'cold'    
+  return 'veg'                                 
+}
+
+function removeValue<T>(array: T[], value: T): T[] {
+  return array.filter(item => item !== value);
+}
+
+function getFieldProba(ft: 'humide' | 'normal' | 'sec' | 'tres_sec'): number {
+  switch (ft) {
+    case 'humide':
+      return 0.1
+    case 'normal':
+      return 0.3
+    case 'sec':
+      return 0.6
+    case 'tres_sec':
+      return 0.9
+  }
 }
 
 // tire deux entiers distincts 0..(max-1)
-function pickTwoDistinct(max) {
-  let intialFieldBurningID = rand(max);
-  let intialFieldBurningID2 = rand(max);
-  while (intialFieldBurningID2 === intialFieldBurningID)
-    intialFieldBurningID2 = rand(max);
-  return [intialFieldBurningID, intialFieldBurningID2];
+function pickThreeDistinct(max: number): [number, number, number] {
+  let initialFieldBurningID = rand(max)
+  let initialFieldBurningID2 = rand(max)
+  let initialFieldBurningID3 = rand(max)
+  while (initialFieldBurningID2 === initialFieldBurningID) initialFieldBurningID2 = rand(max)
+  while (initialFieldBurningID3 === initialFieldBurningID && initialFieldBurningID3 === initialFieldBurningID2) initialFieldBurningID3 = rand(max)
+  return [initialFieldBurningID, initialFieldBurningID2, initialFieldBurningID3]
 }
 
 function initGame() {
-  const [id1, id2] = pickTwoDistinct(width * height);
-  burning.value.set(id1, 2);
-  burning.value.set(id2, 2);
+  burning.value.clear()
+  bah.value.clear()
+  bac.value.clear()
+
+  const [id1, id2, id3] = pickThreeDistinct(width.value * height.value)
+  burning.value.set(id1, 2)
+  burning.value.set(id2, 2)
+  burning.value.set(id3, 2)
 }
 
-function play() {
+function loop() {
+  if (!isPlaying.value) return
+
   if (isEndGame()) {
-    isFinished = true;
-    console.log("🔥 Jeu terminé");
-    return;
+    isFinished.value = true
+    isPlaying.value = false
+    console.log('🔥 Jeu terminé')
+    return
   }
 
-  setTimeout(() => {
-    playTurn();
-    play(); // se rappelle lui-même
-  }, 1000);
+  playTurn()
+  timerId = window.setTimeout(loop, 100)
 }
 
-function playTurn() {
-  let currentState = [];
+/** Démarre / relance la simulation */
+function play() {
+  if (isPlaying.value) return   // déjà en cours
+  isPlaying.value = true
+  isStopped.value = false
+  loop()
+}
+
+function playTurn(){
+  let currentState: any[] = [];
   //On parcours les bosqués à l'état burn / burn and hot
   const merged = [...burning.value.keys(), ...bah.value];
   for (const fieldBurn of merged) {
     let fields = getNeighborhood(fieldBurn);
-    fields.forEach((field) => {
-      if (canSendBrandon(fieldBurn) && canBeBurned(field)) {
-        if (tryToBurn(currentState, field)) {
+    fields.forEach(field => {
+      if(canSendBrandon() && canBeBurned(field)){
+        if(tryToBurn()){
           currentState.push(field);
         }
       }
     });
   }
-  currentState.forEach((value) => {
-    burning.value.set(value, 2);
-  });
-  merged.forEach((fieldBurn) => {
-    let isBurning = burning.value.has(fieldBurn);
+
+  currentState.forEach(value => {
+    burning.value.set(value, 2)
+  })
+
+  merged.forEach(fieldBurn => {
+    const isBurning = burning.value.has(fieldBurn)
     if (isBurning) {
-      burning.value.set(fieldBurn, burning.value.get(fieldBurn) - 1);
-      if (burning.value.get(fieldBurn) == 0) {
-        burning.value.delete(fieldBurn);
-        bah.value.add(fieldBurn);
+      const newTimer = (burning.value.get(fieldBurn) ?? 1) - 1
+      if (newTimer <= 0) {
+        burning.value.delete(fieldBurn)
+        bah.value.add(fieldBurn)
+      } else {
+        burning.value.set(fieldBurn, newTimer)
       }
-    } else {
-      if (fireStop(fieldBurn)) {
+    }else{
+      if(fireStop()){
         bah.value.delete(fieldBurn);
         bac.value.add(fieldBurn);
       }
@@ -110,61 +213,129 @@ function playTurn() {
   });
 }
 
-function fireStop(fieldBurn) {
+function fireStop(){
   let proba = 0.6;
+  let stat =Math.random();
+  return stat <= proba
+}
+
+function canSendBrandon(){
+
+  let proba = 0.05 * (1 + wind.value)
+  let stat =Math.random();
+  debugger;
+  return stat <= proba
+}
+
+function isValidField(field: number){
+  return field <= height.value*width.value && field >= 0
+}
+
+function canBeBurned(field: number){
+  return (isValidField(field) && !burning.value.has(field) && !bah.value.has(field) && !bac.value.has(field));
+}
+
+function tryToBurn(){
+  const ft = fieldType.value 
+  let proba = getFieldProba(ft);
   let stat = Math.random();
-  return stat <= proba;
-}
-
-function canSendBrandon(fieldBurn) {
-  let proba = 0.005 * 1 + wind;
-  let stat = Math.random();
-  return stat <= proba;
-}
-
-function isValidField(field) {
-  return field <= height * width && field >= 0;
-}
-
-function canBeBurned(field) {
-  return (
-    isValidField(field) &&
-    !burning.value.has(field) &&
-    !bah.value.has(field) &&
-    !bac.value.has(field)
-  );
-}
-
-function tryToBurn(currentState) {
-  let proba = 0.3;
-  let stat = Math.floor(Math.random());
-  if (stat <= proba) {
-    return true;
+  if(proba != undefined && stat <= proba){
+    return true
   }
   return false;
 }
 
-function getNeighborhood(fieldBurn) {
-  let fields = [
-    fieldBurn + 1,
-    fieldBurn - 1,
-    fieldBurn + width,
-    fieldBurn - height,
-  ];
-  fields.forEach((field) => {
-    if (!isValidField(field)) {
-      fields.pop(field);
+function getNeighborhood(fieldBurn: number){
+  let fields =[];
+  let rightEdge = (fieldBurn+1)%width.value == 0 ? true : false;
+  let leftEdge = fieldBurn%width.value == 0 || fieldBurn == 0 ? true : false;
+  fields = [rightEdge ? fieldBurn : fieldBurn+1, leftEdge ? fieldBurn : fieldBurn-1, fieldBurn+width.value, fieldBurn-height.value];
+  fields.forEach(field =>{
+    if(!isValidField(field)){
+      removeValue(fields, field)
     }
   });
   return fields;
 }
 
 function isEndGame() {
-  return burning.length == 0 && bah.length == 0;
+  return burning.value.size === 0 && bah.value.size === 0
 }
 
-onMounted(() => {
-  initGame();
-  play();
-});
+// charge config depuis Node au chargement
+async function loadConfigFromApi() {
+  try {
+    const res = await fetch(`${API_URL}/config`)
+    const cfg = await res.json()
+
+    if (typeof cfg.width === 'number' && typeof cfg.height === 'number') {
+      width.value = cfg.width
+      height.value = cfg.height
+      rebuildGrid()
+    } else {
+      rebuildGrid()
+    }
+
+    if (typeof cfg.wind === 'number') wind.value = cfg.wind
+    if (typeof cfg.fieldType === 'string') fieldType.value = cfg.fieldType
+    if (typeof cfg.terrain === 'string') terrain.value = cfg.terrain
+
+  } catch (e) {
+    console.error('Erreur de chargement de la config API', e)
+    rebuildGrid()
+  }
+}
+
+/** bouton Pause */
+function pause() {
+  isPlaying.value = false
+  isStopped.value = true
+  if (timerId !== null) {
+    clearTimeout(timerId)
+    timerId = null
+  }
+}
+function togglePause() {
+  if (isPlaying.value) {
+    pause()
+  } else {
+    if (!isEndGame()) {
+      play()
+    }
+  }
+}
+
+
+async function startSimulation() {
+  // envoie nouvelle taille au backend
+  try {
+    await fetch(`${API_URL}/config`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        width: width.value,
+        height: height.value,
+        wind: wind.value,
+        fieldType: fieldType.value,
+        terrain: terrain.value
+      }),
+    })
+  } catch (e) {
+    console.error('Erreur lors de la mise à jour de la config', e)
+  }
+
+  // reconstruit grille selon taille choisie
+  rebuildGrid()
+
+  // arrête une éventuelle simu en cours
+  pause()
+
+  // lance nouvelle partie
+  initGame()
+  play()
+}
+
+onMounted(async () => {
+  await loadConfigFromApi()   // récupère variables
+})
 </script>
