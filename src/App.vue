@@ -8,6 +8,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
+// @ts-ignore: No declaration file for .vue modules
 import HelloWorld from './components/HelloWorld.vue';
 
 const updateAvailable = ref(false);
