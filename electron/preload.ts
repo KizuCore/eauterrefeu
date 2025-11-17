@@ -1,5 +1,7 @@
-import { contextBridge, ipcRenderer } from 'electron'
+import { contextBridge, ipcRenderer } from 'electron';
 
 contextBridge.exposeInMainWorld('electronAPI', {
-  onUpdateReady: (callback: () => void) => ipcRenderer.on('updateReady', callback)
-})
+  send: (channel, data) => ipcRenderer.send(channel, data),
+  on: (channel, callback) =>
+    ipcRenderer.on(channel, (event, ...args) => callback(...args)),
+});

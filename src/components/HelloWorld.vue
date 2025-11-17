@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h2>Forêt 5x5 v0.3</h2>
+    <h2>Forêt 5x5</h2>
 
     <table class="grid-table">
       <tbody>
