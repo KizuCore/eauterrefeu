@@ -168,7 +168,7 @@ function loop() {
   }
 
   playTurn()
-  timerId = window.setTimeout(loop, 1000)
+  timerId = window.setTimeout(loop, 100)
 }
 
 /** Démarre / relance la simulation */
