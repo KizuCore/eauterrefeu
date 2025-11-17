@@ -1,7 +1,7 @@
 {
   "width": 10,
   "height": 10,
-  "wind": 2,
-  "fieldType": "normal",
+  "wind": 3,
+  "fieldType": "tres_sec",
   "vegetation": "continue"
 }
