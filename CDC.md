@@ -9,7 +9,7 @@ L’objectif est de visualiser l’impact de ces paramètres sur la propagation 
 
 L’application est composée :
 - d’un front-end en Vue 3 + TypeScript
-- d’un back-end Express (Node.js) pour la gestion de la configuration via une API REST.
+- d’un back-end Express (Node.js) pour la gestion de la configuration via une API.
 
 ---
 
