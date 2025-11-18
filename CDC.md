@@ -122,7 +122,7 @@ Un tour de simulation exécute les actions suivantes :
     - `bah` : cellules brûlées chaudes.
     - `bac` : cellules brûlées froides.
 - Boucle de simulation :
-  - Fonction `loop()` déclenchée par `setTimeout` (tous les 100 ms).
+  - Fonction `loop()` déclenchée par `setTimeout`.
 
 ### 4.2 Back-end (IPC Express)
 
