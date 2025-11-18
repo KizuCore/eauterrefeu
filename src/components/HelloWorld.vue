@@ -36,7 +36,7 @@
           <option value="continue">Continue</option>
           <option value="peu">Peu espacé</option>
           <option value="espacee">Espacé</option>
-          <option value="clairsemee">Clairsemé</option>
+          <option value="clairsemee">Clairsemée</option>
         </select>
       </label>
 
