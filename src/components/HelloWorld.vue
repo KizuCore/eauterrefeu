@@ -34,8 +34,8 @@
       <label>Végétation
         <select v-model="vegetation">
           <option value="continue">Continue</option>
-          <option value="peu">Peu espacé</option>
-          <option value="espacee">Espacé</option>
+          <option value="peu">Peu espacée</option>
+          <option value="espacee">Espacée</option>
           <option value="clairsemee">Clairsemée</option>
         </select>
       </label>
