@@ -141,7 +141,7 @@ Un tour de simulation exécute les actions suivantes :
 
 ---
 
-## 5. Spécifications fonctionnelles – V2 (2.0.0, prévue)
+## 5. Spécifications fonctionnelles – V2 (2.0.0)
 
 ### 5.1 Objectif de la V2
 
