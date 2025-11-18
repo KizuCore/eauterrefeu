@@ -442,6 +442,6 @@ function mulberry32(seed: number): () => number {
 }
 
 function randomiseValue(seed: number): number{
-  return mulberry32(seed*2**32)();
+  return mulberry32(Math.random()*2**32)();
 }
 </script>
