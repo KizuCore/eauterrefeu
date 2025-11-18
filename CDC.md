@@ -162,10 +162,13 @@ Améliorer la prise en compte du vent dans la propagation du feu, en introduisan
 ### V1
 - Création de la grille dynamique.
 - Gestion des différents états de cellules.
+- Ajout du vent
+- Choix du type de terrain
 - Propagation du feu avec probabilités.
 - IPC front/back via une API REST (`GET`/`PUT /api/config`).
 
 ### V2
-- Refactor de la logique de propagation pour intégrer les probabilités du vent (hors des cases voisines) rendant un feu plus réaliste.
-- Mise à jour de l’API (ajout du champ `wind_type`, par ex.).
-- Ajustement des probabilités par voisin.
+- Refactor complet de la logique de propagation du feu lié au type du vent
+- Ajout d'un pattern de propagation par force du vent
+- Intégration des probabilités liées au vent, permettant une propagation plus réaliste.
+- Mise à jour de l’API avec un nouveau champ `wind_type`.
