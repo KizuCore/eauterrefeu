@@ -146,13 +146,13 @@ Un tour de simulation exécute les actions suivantes :
 ### 5.1 Objectif de la V2
 
 Améliorer la prise en compte du vent dans la propagation du feu, en introduisant :
-- Un modèle de probabilité plus réaliste, différencié selon la direction des voisins.
+- Un modèle de probabilité plus réaliste.
 
 ### 5.2 Nouvelles fonctionnalités
 
 | Fonctionnalité       | Description                                                                 |
 |----------------------|-----------------------------------------------------------------------------|
-| Propagation orientée | Les voisins sous le vent ont une proba de propagation plus élevée.         |
+| Propagation réaliste | Les propagations se fait en fonction d'un pattern dépendant de la force du vent         |
 
 
 ---
