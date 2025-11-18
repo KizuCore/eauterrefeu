@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "concurrently -k \"cross-env NODE_ENV=development vite\" \"cross-env NODE_ENV=development electron .\"",
     "build": "vite build && electron-builder",
+    "build:linux": "vite build && electron-builder --linux",
     "publish": "electron-builder --publish always"
   },
   "build": {
@@ -20,7 +21,8 @@
     "files": [
       "dist/**",
       "electron/**",
-      "package.json"
+      "package.json",
+      "backend/**/*"
     ],
     "win": {
       "target": [
