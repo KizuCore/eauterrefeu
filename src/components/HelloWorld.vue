@@ -13,21 +13,12 @@
         <input type="number" v-model.number="height" min="5" max="200" />
       </label>
 
-      <label>Direction du vent
-        <select v-model="wind">
-          <option :value="0">Nord</option>
-          <option :value="1">Sud</option>
-          <option :value="2">Ouest</option>
-          <option :value="3">Est</option>
-        </select>
-      </label>
-
       <label>Force du vent
-        <select v-model="wind">
-          <option :value="0">Nul</option>
-          <option :value="1">Modéré</option>
-          <option :value="2">Fort</option>
-          <option :value="3">Violent</option>
+        <select v-model="wind_type">
+          <option value="nul">Nul</option>
+          <option value="weak">Modéré</option>
+          <option value="strong">Fort</option>
+          <option value="violent">Violent</option>
         </select>
       </label>
 
@@ -78,7 +69,6 @@
 
 
 <script setup lang="ts">
-import { debug } from 'console'
 import { ref, onMounted } from 'vue'
 
 const API_URL = 'http://localhost:3000/api' // backend 
@@ -86,8 +76,7 @@ const API_URL = 'http://localhost:3000/api' // backend
 // taille de la grille par défaut
 const width = ref(5)
 const height = ref(5)
-let seed : number = 0.877728959950038;
-console.log(seed);
+let seed : number = Math.random();
 let wind_pattern: any[] = [];
 const fieldType = ref<'humide' | 'normal' | 'sec' | 'tres_sec'>('normal')
 const terrain  = ref<'continu'|'peu'|'espace'|'clair'>('continu')
@@ -103,6 +92,8 @@ const bac = ref(new Set<number>())             // brûlé froid
 
 // paramètres venant de la config
 const wind = ref(1)
+const wind_type = ref("weak")
+
 
 const isFinished = ref(false)
 const isPlaying = ref(false)   // savoir si la simu tourne
@@ -126,10 +117,6 @@ function stateClass(id: number) {
   if (bah.value.has(id))     return 'hot'    
   if (bac.value.has(id))     return 'cold'    
   return 'veg'                                 
-}
-
-function removeValue<T>(array: T[], value: T): T[] {
-  return array.filter(item => item !== value);
 }
 
 function getFieldProba(ft: 'humide' | 'normal' | 'sec' | 'tres_sec'): number {
@@ -297,19 +284,20 @@ async function loadConfigFromApi() {
     const res = await fetch(`${API_URL}/config`)
     const cfg = await res.json()
 
-    const jsonGet = await fetch(`${API_URL}/nul_wind`)
+    const jsonGet = await fetch(`${API_URL}/`+wind_type.value+`_wind`)
     const jsonApi = await jsonGet.json()
 
     if (typeof cfg.width === 'number' && typeof cfg.height === 'number') {
-      width.value = cfg.width
-      height.value = cfg.height
+      width.value = cfg.width;
+      height.value = cfg.height;
       wind_pattern = jsonApi;
+      changeWindStrength();
       rebuildGrid()
     } else {
       rebuildGrid()
     }
 
-    if (typeof cfg.wind === 'number') wind.value = cfg.wind
+    if (typeof cfg.wind_type === 'string') wind_type.value = cfg.wind_type
     if (typeof cfg.fieldType === 'string') fieldType.value = cfg.fieldType
     if (typeof cfg.terrain === 'string') terrain.value = cfg.terrain
 
@@ -347,11 +335,16 @@ async function startSimulation() {
       body: JSON.stringify({
         width: width.value,
         height: height.value,
-        wind: wind.value,
+        wind_type: wind_type.value,
         fieldType: fieldType.value,
         terrain: terrain.value
       }),
     })
+    const jsonGet = await fetch(`${API_URL}/`+wind_type.value+`_wind`)
+    const jsonApi = await jsonGet.json()
+    wind_pattern = jsonApi;
+    changeWindStrength();
+
   } catch (e) {
     console.error('Erreur lors de la mise à jour de la config', e)
   }
@@ -365,6 +358,23 @@ async function startSimulation() {
   // lance nouvelle partie
   initGame()
   play()
+}
+
+function changeWindStrength(){
+  switch (wind_type.value){
+    case 'nul':
+      wind.value = 0
+      break;
+    case 'weak':
+      wind.value = 1
+      break;
+    case 'strong':
+      wind.value = 2
+      break;
+    case 'violent':
+      wind.value = 3
+      break;
+  }
 }
 
 onMounted(async () => {
