@@ -13,12 +13,12 @@
         <input type="number" v-model.number="height" min="5" max="200" />
       </label>
 
-      <label>Vent
-        <select v-model="wind">
-          <option :value="0">Nul</option>
-          <option :value="1">Modéré</option>
-          <option :value="2">Fort</option>
-          <option :value="3">Violent</option>
+      <label>Force du vent
+        <select v-model="wind_type">
+          <option value="nul">Nul</option>
+          <option value="weak">Modéré</option>
+          <option value="strong">Fort</option>
+          <option value="violent">Violent</option>
         </select>
       </label>
 
@@ -76,6 +76,8 @@ const API_URL = 'http://localhost:3000/api' // backend
 // taille de la grille par défaut
 const width = ref(5)
 const height = ref(5)
+let seed : number = Math.random();
+let wind_pattern: any[] = [];
 const fieldType = ref<'humide' | 'normal' | 'sec' | 'tres_sec'>('normal')
 const vegetation  = ref<'continue'|'peu'|'espacee'|'clairsemee'>('continue')
 const inert = ref(new Set<number>())
@@ -91,6 +93,8 @@ const bac = ref(new Set<number>())             // brûlé froid
 
 // paramètres venant de la config
 const wind = ref(1)
+const wind_type = ref("weak")
+
 
 const isFinished = ref(false)
 const isPlaying = ref(false)   // savoir si la simu tourne
@@ -117,10 +121,6 @@ function stateClass(id: number) {
   return 'veg'
 }
 
-
-function removeValue<T>(array: T[], value: T): T[] {
-  return array.filter(item => item !== value);
-}
 
 function getTerrainVegetationProba(t: 'continue' | 'peu' | 'espacee' | 'clairsemee'): number {
   switch (t) {
@@ -223,14 +223,24 @@ function play() {
   loop()
 }
 
+function getFieldFromCoord(coord: { x: number, y:number, proba:number }, fieldBurn : number){
+  return fieldBurn + coord.x + (coord.y*height.value);
+}
+
+function canReiceiveBrandon(proba : number){
+  let value = randomiseValue(seed);
+  return proba <= value
+}
+
 function playTurn(){
   let currentState: any[] = [];
   // parcours les cases à l'état burn / burn and hot
   const merged = [...burning.value.keys(), ...bah.value];
-  for (const fieldBurn of merged) {
-    let fields = getNeighborhood(fieldBurn);
-    fields.forEach(field => {
-      if(canSendBrandon() && canBeBurned(field)){
+  for (const fieldBurn of merged) {    
+    wind_pattern.forEach(coord => {
+      let field = getFieldFromCoord(coord, fieldBurn);
+      let proba = coord.proba;
+      if(!isOutOfBound(fieldBurn, field,coord.x, coord.y) && canSendBrandon() && canReiceiveBrandon(proba) && canBeBurned(field)){
         if(tryToBurn()){
           currentState.push(field);
         }
@@ -263,19 +273,18 @@ function playTurn(){
 
 function fireStop(){
   let proba = 0.6;
-  let stat =Math.random();
+  let stat = randomiseValue(seed);
   return stat <= proba
 }
 
 function canSendBrandon(){
-  let proba = 0.05 * (1 + wind.value)
-  let stat =Math.random();
-  debugger;
+  let proba = 0.005 * (1 + wind.value)
+  let stat = randomiseValue(seed);
   return stat <= proba
 }
 
 function isValidField(field: number){
-  return field <= height.value*width.value && field >= 0
+  return field <= (height.value*width.value) -1 && field > 0
 }
 
 function canBeBurned(field: number){
@@ -285,24 +294,32 @@ function canBeBurned(field: number){
 function tryToBurn(){
   const ft = fieldType.value 
   let proba = getFieldProba(ft);
-  let stat = Math.random();
-  if(proba != undefined && stat <= proba){
+  let stat = randomiseValue(seed);
+  if(proba != undefined && stat < proba){
     return true
   }
   return false;
 }
 
-function getNeighborhood(fieldBurn: number){
-  let fields =[];
-  let rightEdge = (fieldBurn+1)%width.value == 0 ? true : false;
-  let leftEdge = fieldBurn%width.value == 0 || fieldBurn == 0 ? true : false;
-  fields = [rightEdge ? fieldBurn : fieldBurn+1, leftEdge ? fieldBurn : fieldBurn-1, fieldBurn+width.value, fieldBurn-height.value];
-  fields.forEach(field =>{
-    if(!isValidField(field)){
-      removeValue(fields, field)
-    }
-  });
-  return fields;
+function isOutOfBound(initialField : number, burningField : number, coordX : number, coordY: number){
+  let isOutOfBound = !isValidField(burningField);
+  if(isOutOfBound){
+    return true
+  }
+  if(coordY === 0){
+    return Math.floor(initialField / 10) !== Math.floor(burningField / 10);
+  }
+
+  //Si on dépasse de la droite 
+  if((initialField+coordX)%height.value == 0 && ((initialField+2)%height.value == 0 || (initialField+1)%height.value == 0)){
+    return true;
+  }
+
+  //Si on dépasse de la gauche
+  if((initialField+1+coordX)%height.value == 0 && (initialField%height.value == 0 || (initialField-1)%height.value == 0)){
+    return true;
+  }
+  return isOutOfBound;
 }
 
 function isEndGame() {
@@ -315,15 +332,20 @@ async function loadConfigFromApi() {
     const res = await fetch(`${API_URL}/config`)
     const cfg = await res.json()
 
+    const jsonGet = await fetch(`${API_URL}/`+wind_type.value+`_wind`)
+    const jsonApi = await jsonGet.json()
+
     if (typeof cfg.width === 'number' && typeof cfg.height === 'number') {
-      width.value = cfg.width
-      height.value = cfg.height
+      width.value = cfg.width;
+      height.value = cfg.height;
+      wind_pattern = jsonApi;
+      changeWindStrength();
       rebuildGrid()
     } else {
       rebuildGrid()
     }
 
-    if (typeof cfg.wind === 'number') wind.value = cfg.wind
+    if (typeof cfg.wind_type === 'string') wind_type.value = cfg.wind_type
     if (typeof cfg.fieldType === 'string') fieldType.value = cfg.fieldType
     if (typeof cfg.vegetation === 'string') vegetation.value = cfg.vegetation
 
@@ -352,7 +374,6 @@ function togglePause() {
   }
 }
 
-
 async function startSimulation() {
   // envoie nouvelle taille au backend
   try {
@@ -362,11 +383,16 @@ async function startSimulation() {
       body: JSON.stringify({
         width: width.value,
         height: height.value,
-        wind: wind.value,
+        wind_type: wind_type.value,
         fieldType: fieldType.value,
         vegetation: vegetation.value
       }),
     })
+    const jsonGet = await fetch(`${API_URL}/`+wind_type.value+`_wind`)
+    const jsonApi = await jsonGet.json()
+    wind_pattern = jsonApi;
+    changeWindStrength();
+
   } catch (e) {
     console.error('Erreur lors de la mise à jour de la config', e)
   }
@@ -382,7 +408,40 @@ async function startSimulation() {
   play()
 }
 
+function changeWindStrength(){
+  switch (wind_type.value){
+    case 'nul':
+      wind.value = 0
+      break;
+    case 'weak':
+      wind.value = 1
+      break;
+    case 'strong':
+      wind.value = 2
+      break;
+    case 'violent':
+      wind.value = 3
+      break;
+  }
+}
+
 onMounted(async () => {
   await loadConfigFromApi()   // récupère variables
 })
+
+
+function mulberry32(seed: number): () => number {
+  let t = seed >>> 0;
+  return function() {
+    t += 0x6D2B79F5;
+    let r = t;
+    r = Math.imul(r ^ (r >>> 15), r | 1);
+    r ^= r + Math.imul(r ^ (r >>> 7), r | 61);
+    return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
+  }
+}
+
+function randomiseValue(seed: number): number{
+  return mulberry32(Math.random()*2**32)();
+}
 </script>

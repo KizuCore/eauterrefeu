@@ -1,7 +1,9 @@
 {
   "width": 10,
   "height": 10,
-  "wind": 3,
+  "wind_type": "violent",
   "fieldType": "tres_sec",
-  "vegetation": "continue"
+  "terrain": "continu",
+  "wind": "strong",
+  "vegetation": "espacee"
 }
