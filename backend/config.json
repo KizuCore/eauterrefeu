@@ -4,5 +4,6 @@
   "wind_type": "violent",
   "fieldType": "tres_sec",
   "terrain": "continu",
-  "wind": "strong"
+  "wind": "strong",
+  "vegetation": "continue"
 }

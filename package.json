@@ -1,18 +1,15 @@
 {
   "name": "eauterrefeu",
   "private": true,
-  "version": "0.2.0",
+  "type": "commonjs",
+  "main": "dist/main/main.js",
+  "version": "1.0.0",
   "description": "Application desktop EauterreFeu avec Vue 3 et Electron",
   "author": "BAT",
-  "type": "module",
-  "main": "dist/main/main.mjs",
   "scripts": {
-    "dev": "vite",
-    "electron:dev": "vite",
-    "build:renderer": "vite build",
+    "dev": "concurrently -k \"cross-env NODE_ENV=development vite\" \"cross-env NODE_ENV=development electron .\"",
     "build": "vite build && electron-builder",
-    "publish": "electron-builder --publish always",
-    "preview": "vite preview"
+    "publish": "electron-builder --publish always"
   },
   "build": {
     "appId": "com.eauterrefeu.app",
@@ -26,7 +23,14 @@
       "package.json"
     ],
     "win": {
-      "target": "nsis",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
       "icon": "electron/icon.ico"
     },
     "mac": {
@@ -35,8 +39,14 @@
     },
     "linux": {
       "target": [
-        "AppImage"
+        "AppImage",
+        "deb"
       ],
+      "maintainer": "Benjamin",
+      "vendor": "EauterreFeu",
+      "synopsis": "Application desktop EauterreFeu",
+      "description": "Application multiplateforme Vue 3 + Electron pour la gestion d'EauterreFeu",
+      "category": "Utility",
       "icon": "electron/icon.png"
     },
     "publish": [
@@ -59,6 +69,7 @@
     "@vitejs/plugin-vue": "^6.0.1",
     "@vue/tsconfig": "^0.8.1",
     "concurrently": "^9.2.1",
+    "cpy": "^12.1.0",
     "cross-env": "^10.1.0",
     "electron": "^38.4.0",
     "electron-builder": "^26.0.12",

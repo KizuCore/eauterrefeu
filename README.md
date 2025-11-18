@@ -28,13 +28,8 @@ npm install
 
 ### 2 Lancer le serveur back
 
-
 ```bash
-cd backend
-```
-
-```bash
-node server.cjs
+node backend/server.cjs
 ```
 
 ---
@@ -52,6 +47,10 @@ Le projet sera accessible sur :
 
 ```
 eauterrefeu/
+├─ backend/           # Code back
+│  ├─ config.json
+│  └─ server.cjs
+│
 ├─ electron/           # Code principal Electron (main & preload)
 │  ├─ main.ts
 │  └─ preload.ts
@@ -85,4 +84,5 @@ eauterrefeu/
 - Le projet utilise **Vite** pour le bundling et **Electron** pour créer une application desktop.  
 - Le code Vue s’exécute côté *renderer*, et Electron gère la fenêtre, les menus et l’accès au système.  
 - Assurez-vous de bien vérifier le champ `"main"` du `package.json` en fonction de la sortie (`dist` ou `dist-electron`).
+- N'hésitez pas à lire le cahier des charges `CDC.md`.
 
