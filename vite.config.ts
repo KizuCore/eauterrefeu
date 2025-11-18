@@ -4,25 +4,27 @@ import electron from '@tomjs/vite-plugin-electron'
 import path from 'path'
 
 export default defineConfig({
-  base: './', // important pour que les chemins relatifs fonctionnent en production
+  base: './',
   plugins: [
     vue(),
     electron({
       main: {
-        entry: 'electron/main.ts' // juste l'entrée, pas de propriété "vite"
+        entry: 'electron/main.ts',
       },
       preload: {
-        entry: { preload: 'electron/preload.ts' } // entrée du preload
-      }
-    })
+        entry: {
+          preload: 'electron/preload.ts',
+        },
+      },
+    }),
   ],
   build: {
-    outDir: 'dist/renderer', // sortie du renderer (Vite)
-    emptyOutDir: true
+    outDir: 'dist',
+    emptyOutDir: true,
   },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, 'src')
-    }
-  }
+      '@': path.resolve(__dirname, 'src'),
+    },
+  },
 })
