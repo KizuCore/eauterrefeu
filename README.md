@@ -73,7 +73,7 @@ eauterrefeu/
 
 ## 🧠 Notes
 
-- Le projet utilise **Vite** pour le bundling et **Electron** pour créer une application desktop.  
+- Le projet utilise **Vite** pour le bundling et **Electron** pour créer une application desktop. Ainsi qu'**Express** pour l'API.
 - Le code Vue s’exécute côté *renderer*, et Electron gère la fenêtre, les menus et l’accès au système.  
 - Assurez-vous de bien vérifier le champ `"main"` du `package.json` en fonction de la sortie (`dist` ou `dist-electron`).
 - N'hésitez pas à lire le cahier des charges `CDC.md`.
