@@ -67,6 +67,7 @@ eauterrefeu/
 |-----------|-------------|
 | `npm run dev` | Lance le serveur de développement |
 | `npm run build` | Compile le projet pour la production |
+| `npm run publish` | Publier une release sur GitHub |
 
 ---
 
