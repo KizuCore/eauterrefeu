@@ -26,13 +26,7 @@ npm -v
 npm install
 ```
 
-### 2 Lancer le serveur back
-
-```bash
-node backend/server.cjs
-```
-
-### 3 Lancer le serveur de développement
+### 2 Lancer le serveur de développement
 ```bash
 npm run dev
 ```
