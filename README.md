@@ -39,7 +39,7 @@ Le projet sera accessible sur :
 
 ```
 eauterrefeu/
-├─ backend/           # Code back
+├─ backend/            # Code back
 │  ├─ config.json
 │  └─ server.cjs
 │
@@ -67,7 +67,6 @@ eauterrefeu/
 |-----------|-------------|
 | `npm run dev` | Lance le serveur de développement |
 | `npm run build` | Compile le projet pour la production |
-| `npm run preview` | Sert localement la version compilée |
 
 ---
 
